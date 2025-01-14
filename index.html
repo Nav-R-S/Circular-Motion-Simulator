@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sketch</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+  </head>
+
+  <body>
+
+    
+
+    <div class="container">
+
+      <div id="toolbar">
+        <div class="left">
+          <div id="point" class="tool">point</div>
+          <div id="line" class="tool">line</div>
+          <div id="particle" class="tool">particle</div>
+          <div id="surface" class="tool">surface</div>     
+        </div>
+        <div class="right">
+          <div id="bin" class="tool">bin</div>
+          <div id="home" class="tool">home</div>
+          <div id="profile" class="tool">profile</div>
+        </div>
+      </div>
+
+      <div id="timeline">
+        <div id="timelineContainer"> <!--to use display flex-->
+          <input type="image" src="images/pauseButton.png" id="pauseButton" class="timelineButton">
+          <input type="range" min="1" max="100" value="100" class="slider" id="timeBar">
+          <input type="image" src="images/playButton.png" id="playButton" class="timelineButton">
+        </div>
+      </div>
+      <div id="canvas"><!--<div id="objects" class="tool"><p>objects</p></div>--></div>
+    </div>
+    
+    <script src="sketch.js"></script>
+  </body>
+</html>
