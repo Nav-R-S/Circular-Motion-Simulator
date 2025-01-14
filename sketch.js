@@ -13,6 +13,9 @@ let playButton = document.getElementById("playButton");
 let pauseButton = document.getElementById("pauseButton");
 let play
 
+timeBar.max = 0;
+timeBar.min = 0;
+
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight - 115);
   cnv.parent("canvas")
@@ -116,11 +119,13 @@ function draw() {
   textSize(100);
   text(t, 50, 115);
   if (play == true) {
+    
     t += 1 / 60;
+    if (t > timeBar.max) {
+      timeBar.max = t;
+      timeBar.step = t / 10000;
+    } 
     timeBar.value = t;
-
-    // timeBar.max = t;
-    // timeBar.step = t / 100;
     // timeBar.min = t / 100;
     // timeBar.value = t
   }
@@ -129,25 +134,20 @@ function draw() {
 //timeBar.step = 1 / 60;
 //timeBar.min = 1 / 60;
 timeBar.oninput = function () {
-  if (play == false) {
-    t = this.value;
-  }
-  console.log(this.value)
+  t = parseFloat(this.value);
+  console.log(t, typeof t)
 }
 
-playButton.onclick = function () {
+playButton.onmousedown = function () {
   if (play == false) {
     play = true;
   }
 }
 
-pauseButton.onclick = function () {
+pauseButton.onmousedown = function () {
   if (play == true) {
     play = false;
-    timeBar.max = t;
-    timeBar.step = t / 100;
-    timeBar.min = t / 100;
-    timeBar.value = t
+    timeBar.value = t;
   }
 };
 
