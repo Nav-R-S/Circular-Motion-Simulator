@@ -26,7 +26,7 @@ function setup() {
   angle2 = 0;
   r = 250;
   g = 10;
-  v = 20;
+  v = 22;
   len = r / 25; //sets scale --> 25 = 1m
   angAcc = 0;
   angVel = v / len; //sets angVelcoity
@@ -117,7 +117,7 @@ function draw() {
   circle(particle2.x, particle2.y, 25); //2
 
   textSize(100);
-  text(t, 50, 115);
+  text(t.toFixed(2), 50, 115);
   if (play == true) {
     
     t += 1 / 60;
@@ -150,5 +150,3 @@ pauseButton.onmousedown = function () {
     timeBar.value = t;
   }
 };
-
-

@@ -54,6 +54,7 @@ canvas {
 
 #timelineContainer {
   display: flex;
+  user-select: none;
 }
 
 .slider {
@@ -68,6 +69,7 @@ canvas {
   opacity: 0.7;
   -webkit-transition: 0.2s;
   transition: opacity 0.2s;
+  user-select: none;
 }
 
 .slider:hover {
@@ -112,4 +114,5 @@ canvas {
   height: 100px;
   width: 100px;
   background-color: #e4c779;
+  user-select: none;
 }
