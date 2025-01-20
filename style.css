@@ -15,6 +15,7 @@ canvas {
   background-color: rgb(74, 78, 105);
   padding-left: 10px;
   padding-right: 10px;
+  user-select: none;
 }
 
 .tool{
@@ -113,6 +114,6 @@ canvas {
   border-radius: 50%;
   height: 100px;
   width: 100px;
-  background-color: #e4c779;
+  background-color: rgb(228, 199, 121);
   user-select: none;
 }

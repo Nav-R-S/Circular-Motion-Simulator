@@ -11,10 +11,118 @@ let t;
 let timeBar = document.getElementById("timeBar")
 let playButton = document.getElementById("playButton");
 let pauseButton = document.getElementById("pauseButton");
-let play
+let play;
+let firstPlay = true;
 
 timeBar.max = 0;
 timeBar.min = 0;
+
+let elements = [];
+let points = [];
+let particles = [];
+
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.radius = 2.5;
+    this.endX = x;
+    this.endY = y;
+    this.drag = false;
+    this.lineDrag = false;
+    this.lineLocked = false;
+    this.particle = null;
+  }
+  draw() {
+    line(this.x, this.y, this.endX, this.endY);
+    fill(0, 0, 0);
+    circle(this.x, this.y, 2 * this.radius);
+  }
+  checkParticle(particleList) {
+    for (let particle of particleList) {
+      if (
+        (this.endX - particle.x) ** 2 + (this.endY - particle.y) ** 2 <= particle.radius ** 2) {
+        this.lineLocked = true;
+        this.particle = particle;
+        this.particle.originPoint = this;
+        this.endX = particle.x;
+        this.endY = particle.y;
+      }
+    }
+    if (this.lineLocked == false) {
+      this.endX = this.x;
+      this.endY = this.y;
+    }
+  }
+}
+
+class Particle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.drag = false;
+    this.radius = 12.5;
+    this.originPoint = null
+    this.angle = 0;
+    this.lineDist = 0;
+    this.initialVel = 0;
+    this.initialAngle = 0;
+  }
+  draw() {
+    fill(255, 0, 255);
+    circle(this.x, this.y, 2 * this.radius);
+  }
+
+  update(t) {
+    this.rodMovement(t);
+    this.updateRod();
+  }
+
+  rodMovement(t) {
+    //console.log("1", this.angle);
+    //console.log(0, t, this.initialAngle, this.initialVel / (this.lineDist / 25), 0.0025)
+    this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / 25), 0.0025);
+    //console.log("2", this.angle)
+    this.x = this.originPoint.x + this.lineDist * Math.sin(this.angle);
+    this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
+  }
+
+  updateRod() {
+    if (this.originPoint) {
+      this.originPoint.endX = this.x;
+      this.originPoint.endY = this.y;
+    }
+    
+  }
+
+  setupParticle(initialVel) {
+    //console.log("SETUP----------------------------------------------------------------------------");
+    this.initialVel = initialVel;
+    this.getAngleFromPos();
+    this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y); 
+  }
+
+  getAngleFromPos() {
+    let gradient = (this.y - this.originPoint.y) / (this.x - this.originPoint.x); //gradient = tan of angle from positive x axis
+    //console.log(gradient, "GRAD");
+    if (this.x < this.originPoint.x) {
+      this.initialAngle = 3*Math.PI / 2 - Math.atan(gradient); //particle to left of point
+    } else {
+      console.log(true);
+      this.initialAngle = Math.PI / 2 - Math.atan(gradient); //particle to right of point
+    }
+    //console.log(this.initialAngle, "INIDIAL ANGLEEEEE");
+    //this.initialAngle = Math.PI / 2 + Math.atan(gradient); //calculates theta
+  }
+
+}
+
+let point1 = new Point(0, 0);
+let particle1 = new Particle(0, 0);
+
+points.push(point1);
+particles.push(particle1);
+elements.push(point1, particle1);
 
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight - 115);
@@ -24,8 +132,8 @@ function setup() {
   origin2 = createVector(500, 400);
   angle = 0;
   angle2 = 0;
-  r = 250;
-  g = 10;
+  r = 200;
+  g = 15;
   v = 22;
   len = r / 25; //sets scale --> 25 = 1m
   angAcc = 0;
@@ -33,7 +141,7 @@ function setup() {
   particle = createVector();
   particle2 = createVector();
   t = 0;
-  play = true;
+  play = false;
 }
 
 function windowResized() {
@@ -88,8 +196,11 @@ function rungeKutta(t0, tf, theta0, thetaDot0, h) {
 function draw() {
   background(242, 233, 228);
 
-  particle.x = origin.x + r * Math.sin(angle);
-  particle.y = origin.y + r * Math.cos(angle);
+  point1.draw();
+  particle1.draw();
+  //
+  // particle.x = origin.x + r * Math.sin(angle);
+  // particle.y = origin.y + r * Math.cos(angle);
 
   angle2 = rungeKutta(0, t, 0, v/len, 0.0025)
 
@@ -103,23 +214,25 @@ function draw() {
 
   stroke(0);
   strokeWeight(2);
-  line(origin.x, origin.y, particle.x, particle.y);
+  // line(origin.x, origin.y, particle.x, particle.y);
   line(origin2.x, origin2.y, particle2.x, particle2.y); //2
 
   fill(0, 0, 0);
-  circle(origin.x, origin.y, 5); //origin point
+  //circle(origin.x, origin.y, 5); //origin point
   circle(origin2.x, origin2.y, 5); //origin point 2
 
-  fill(255, 255, 255);
-  circle(particle.x, particle.y, 25); //particle
+  // fill(255, 255, 255);
+  // circle(particle.x, particle.y, 25); //particle
 
-  fill(255, 0, 255);
+  fill(255, 255, 255);
   circle(particle2.x, particle2.y, 25); //2
 
+  fill(232, 180, 35);
   textSize(100);
-  text(t.toFixed(2), 50, 115);
+  text(t.toFixed(2), windowWidth-300, 115);
   if (play == true) {
-    
+    particle1.update(t); //------------------------------------------------------------------------------------ updateo
+    //console.log(particle1.lineDist, particle1.initialVel, particle1.angle);
     t += 1 / 60;
     if (t > timeBar.max) {
       timeBar.max = t;
@@ -128,6 +241,54 @@ function draw() {
     timeBar.value = t;
     // timeBar.min = t / 100;
     // timeBar.value = t
+  }
+}
+
+function mouseDragged() {
+  for (let e of elements) {
+    if (e.drag) {
+      e.x = mouseX;
+      e.y = mouseY;
+    }
+  }
+  for (let p of points) {
+    if (!p.lineLocked) {
+      if (p.lineDrag) {
+        p.endX = mouseX;
+        p.endY = mouseY;
+      } else {
+        p.endX = p.x;
+        p.endY = p.y;
+      }
+    } else {
+      p.endX = p.particle.x;
+      p.endY = p.particle.y;
+    }
+  }
+}
+
+function mousePressed() {
+  for (let e of elements) {
+    if ((mouseX - e.x) ** 2 + (mouseY - e.y) ** 2 <= e.radius ** 2) {
+      if (mouseButton === LEFT) {
+        e.drag = true;
+      } else if (points.includes(e) && mouseButton === RIGHT) {
+        e.lineDrag = true;
+        e.lineLocked = false;
+      }
+    }
+  }
+}
+
+function mouseReleased() {
+  for (let e of elements) {
+    e.drag = false;
+  }
+  for (let p of points) {
+    if (p.lineDrag) {
+      p.lineDrag = false;
+      p.checkParticle(particles);
+    }
   }
 }
 
@@ -140,7 +301,15 @@ timeBar.oninput = function () {
 
 playButton.onmousedown = function () {
   if (play == false) {
+    if (firstPlay) {
+      for (let particle of particles) {
+        particle.setupParticle(0);
+        //console.log(particle.lineDist, particle.initialVel, particle.angle);
+      }
+      firstPlay = false;
+    }
     play = true;
+    
   }
 }
 
@@ -150,3 +319,4 @@ pauseButton.onmousedown = function () {
     timeBar.value = t;
   }
 };
+
