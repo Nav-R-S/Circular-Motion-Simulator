@@ -25,6 +25,7 @@ canvas {
   text-align: center;
   line-height: 75px;
   font-size: 30px;
+  align-self: center;
 }
 
 .left {
@@ -114,6 +115,17 @@ canvas {
   border-radius: 50%;
   height: 100px;
   width: 100px;
-  background-color: rgb(228, 199, 121);
+  background-color: transparent;
   user-select: none;
+}
+
+.toolImgButton {
+  background-color: transparent;
+  height: 60px;
+  width: 60px;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
