@@ -1,52 +1,55 @@
-let angle;
-let g, r, v;
-let particle;
-let origin;
-let angAcc, angVel;
-let len;
-
-let angle2;
-let t;
-
 let timeBar = document.getElementById("timeBar")
 let playButton = document.getElementById("playButton");
 let pauseButton = document.getElementById("pauseButton");
-let play;
-let started = false;
 
 timeBar.max = 0;
 timeBar.min = 0;
 
 let resetButton = document.getElementById("resetButton");
 
-let elements = [];
-let points = [];
-let particles = [];
-
 class System {
   constructor(id) {
     this.id = id;
+    this.g = 9.81;
     this.elements = [];
     this.points = [];
     this.particles = [];
     this.started = false;
+    this.play = false;
+    this.t = 0;
   }
 
-  createParticle() {
-    this.particles.push(Particle(this.particles.length, 100, 100));
+  createParticle(x, y, colour) {
+    let newParticle = new Particle(this.particles.length, this, x, y, colour);
+    this.particles.push(newParticle);
+    this.elements.push(newParticle);
   }
 
-  createPoint() {
-    this.points.push(Point(this.points.length, 200, 100));
+  createPoint(x, y) {
+    let newPoint = new Point(this.points.length, this, x, y);
+    this.points.push(newPoint);
+    this.elements.push(newPoint);
+  }
+
+  randColour() {
+    let r = Math.floor(Math.random() * 255);
+    let g = Math.floor(Math.random() * 255);
+    let b = Math.floor(Math.random() * 255);
+    return [r, g, b];
+  }
+
+  resetSys() {
+
   }
 }
 
 class Point {
-  constructor(id, x, y) {
+  constructor(id, sys, x, y) {
     this.id = id;
+    this.sys = sys
     this.x = x;
     this.y = y;
-    this.radius = 2.5;
+    this.radius = 5;
     this.endX = x;
     this.endY = y;
     this.drag = false;
@@ -68,6 +71,8 @@ class Point {
         this.particle.originPoint = this;
         this.endX = particle.x;
         this.endY = particle.y;
+        this.particle.setupParticle(0);
+        this.sys.resetSys();
       }
     }
     if (this.lineLocked == false) {
@@ -78,8 +83,9 @@ class Point {
 }
 
 class Particle {
-  constructor(id, x, y, colour) {
+  constructor(id, sys, x, y, colour) {
     this.id = id;
+    this.sys = sys;
     this.x = x;
     this.y = y;
     this.drag = false;
@@ -102,17 +108,13 @@ class Particle {
   }
 
   rodMovement(t) {
-    //console.log("1", this.angle);
-    //console.log(0, t, this.initialAngle, this.initialVel / (this.lineDist / 25), 0.0025)
-    this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / 25), 0.0025);
-    //console.log("2", this.angle)
+    this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / 50), 0.0025, this.sys.g, (this.lineDist / 50));
     this.x = this.originPoint.x + this.lineDist * Math.sin(this.angle);
     this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
   }
 
-  updateRod() {
+  updateRod(t) {
     if (this.originPoint) {
-      console.log("linelocked", this.originPoint.lineLocked);
       if (this.originPoint.lineLocked) {
         this.rodMovement(t);
         this.originPoint.endX = this.x;
@@ -123,7 +125,6 @@ class Particle {
   }
 
   setupParticle(initialVel) {
-    //console.log("SETUP----------------------------------------------------------------------------");
     this.initialVel = initialVel;
     this.getAngleFromPos();
     this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y); 
@@ -131,49 +132,25 @@ class Particle {
 
   getAngleFromPos() {
     let gradient = (this.y - this.originPoint.y) / (this.x - this.originPoint.x); //gradient = tan of angle from positive x axis
-    //console.log(gradient, "GRAD");
     if (this.x < this.originPoint.x) {
       this.initialAngle = 3*Math.PI / 2 - Math.atan(gradient); //particle to left of point
     } else {
       this.initialAngle = Math.PI / 2 - Math.atan(gradient); //particle to right of point
     }
-    //console.log(this.initialAngle, "INIDIAL ANGLEEEEE");
-    //this.initialAngle = Math.PI / 2 + Math.atan(gradient); //calculates theta
   }
 
 }
 
-let point1 = new Point(1, 0, 0);
-let particle1 = new Particle(1, 0, 0, [255,0,0]);
-let point3 = new Point(3, 100, 0);
-let particle3 = new Particle(3, 100, 0, [0,255,0]);
-
-points.push(point1);
-particles.push(particle1);
-elements.push(point1, particle1);
-
-points.push(point3);
-particles.push(particle3);
-elements.push(point3, particle3);
+sys1 = new System(1)
+sys1.createParticle(100, 100, sys1.randColour());
+sys1.createPoint(100, 200);
+sys1.createParticle(200, 100, sys1.randColour());
+sys1.createPoint(200,200);
 
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight - 105);
   cnv.parent("canvas")
   cnv.position(0, 100);
-  origin = createVector(500, 400);
-  origin2 = createVector(500, 400);
-  angle = 0;
-  angle2 = 0;
-  r = 200;
-  g = 15;
-  v = 22;
-  len = r / 25; //sets scale --> 25 = 1m
-  angAcc = 0;
-  angVel = v / len; //sets angVelcoity
-  particle = createVector();
-  particle2 = createVector();
-  t = 0;
-  play = false;
 }
 
 function windowResized() {
@@ -184,13 +161,13 @@ function f1(t, theta, u) {
   return u;
 }
 
-function f2(t, theta, u) {
+function f2(t, theta, u, g, len) {
   //return t * u ** 2 - theta ** 2
   return -(g / len) * Math.sin(theta);
 }
 
 // thetadot = u
-function rungeKutta(t0, tf, theta0, thetaDot0, h) {
+function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
   let n = parseInt((tf - t0) / h, 10);
   let k1t, k2t, k3t, k4t, k1u, k2u, k3u, k4u;
   let theta = theta0;
@@ -198,16 +175,16 @@ function rungeKutta(t0, tf, theta0, thetaDot0, h) {
 
   for (let i = 1; i <= n; i++) {
     k1t = h * f1(t0, theta, u);
-    k1u = h * f2(t0, theta, u);
+    k1u = h * f2(t0, theta, u, g, len);
 
     k2t = h * f1(t0 + 0.5 * h, theta + 0.5 * k1t, u + 0.5 * k1u);
-    k2u = h * f2(t0 + 0.5 * h, theta + 0.5 * k1t, u + 0.5 * k1u);
+    k2u = h * f2(t0 + 0.5 * h, theta + 0.5 * k1t, u + 0.5 * k1u, g, len);
 
     k3t = h * f1(t0 + 0.5 * h, theta + 0.5 * k2t, u + 0.5 * k2u);
-    k3u = h * f2(t0 + 0.5 * h, theta + 0.5 * k2t, u + 0.5 * k2u);
+    k3u = h * f2(t0 + 0.5 * h, theta + 0.5 * k2t, u + 0.5 * k2u, g, len);
 
     k4t = h * f1(t0 + h, theta + k3t, u + k3u);
-    k4u = h * f2(t0 + h, theta + k3t, u + k3u);
+    k4u = h * f2(t0 + h, theta + k3t, u + k3u, g, len);
 
     theta = theta + (1 / 6) * (k1t + 2 * k2t + 2 * k3t + k4t);
     u = u + (1 / 6) * (k1u + 2 * k2u + 2 * k3u + k4u);
@@ -228,71 +205,41 @@ function rungeKutta(t0, tf, theta0, thetaDot0, h) {
 function draw() {
   background(242, 233, 228);
 
-  point1.draw();
-  particle1.draw();
+  for (let originPoint of sys1.points) {
+    originPoint.draw();
+  }
 
-  point3.draw();
-  particle3.draw();
-
-  for (let particle of particles) {
-    if (particle.originPoint && started) {
-      particle.update(t);
+  for (let particle of sys1.particles) {
+    particle.draw();
+    if (particle.originPoint && sys1.started) {
+      particle.update(sys1.t);
     }
   }
-  //
-  // particle.x = origin.x + r * Math.sin(angle);
-  // particle.y = origin.y + r * Math.cos(angle);
-
-  angle2 = rungeKutta(0, t, 0, v/len, 0.0025)
-
-  particle2.x = origin2.x + r * Math.sin(angle2);
-  particle2.y = origin2.y + r * Math.cos(angle2);
-  // angle2 += 0.055
-
-  // angAcc = -g/len * Math.sin(angle)
-  // angVel += angAcc * 1/60
-  // angle += angVel * 1/60
-
+  
   stroke(0);
   strokeWeight(2);
-  // line(origin.x, origin.y, particle.x, particle.y);
-  line(origin2.x, origin2.y, particle2.x, particle2.y); //2
-
-  fill(0, 0, 0);
-  //circle(origin.x, origin.y, 5); //origin point
-  circle(origin2.x, origin2.y, 5); //origin point 2
-
-  // fill(255, 255, 255);
-  // circle(particle.x, particle.y, 25); //particle
-
-  fill(255, 255, 255);
-  circle(particle2.x, particle2.y, 25); //2
 
   fill(232, 180, 35);
   textSize(100);
-  text(t.toFixed(2), windowWidth-300, 115);
-  if (play == true) {
-    
-    //console.log(particle1.lineDist, particle1.initialVel, particle1.angle);
-    t += 1 / 60;
-    if (t > timeBar.max) {
-      timeBar.max = t;
-      timeBar.step = t / 10000;
+  text(sys1.t.toFixed(2), windowWidth-300, 115);
+  if (sys1.play == true) {
+    sys1.t += 1 / 60;
+    if (sys1.t > timeBar.max) {
+      timeBar.max = sys1.t;
+      timeBar.step = sys1.t / 10000;
     } 
-    timeBar.value = t;
-    // timeBar.min = t / 100;
-    // timeBar.value = t
+    timeBar.value = sys1.t;
   }
 }
 
 function mouseDragged() {
-  for (let e of elements) {
+  for (let e of sys1.elements) {
     if (e.drag) {
       e.x = mouseX;
       e.y = mouseY;
     }
   }
-  for (let p of points) {
+  for (let p of sys1.points) {
     if (!p.lineLocked) {
       if (p.lineDrag) {
         p.endX = mouseX;
@@ -309,13 +256,12 @@ function mouseDragged() {
 }
 
 function mousePressed() {
-  for (let e of elements) {
+  for (let e of sys1.elements) {
     if ((mouseX - e.x) ** 2 + (mouseY - e.y) ** 2 <= e.radius ** 2) {
       if (mouseButton === LEFT) {
         e.drag = true;
-      } else if (points.includes(e) && mouseButton === RIGHT) {
+      } else if (sys1.points.includes(e) && mouseButton === RIGHT) {
         e.lineDrag = true;
-        console.log("linedrag", e.lineDrag);
         e.lineLocked = false;
         if (e.particle) { //checks if connected to a particle --> if so then gets rid of conenction
           e.particle.originPoint = null;
@@ -327,46 +273,48 @@ function mousePressed() {
 }
 
 function mouseReleased() {
-  for (let e of elements) {
+  for (let e of sys1.elements) {
     e.drag = false;
   }
-  for (let p of points) {
+  for (let p of sys1.points) {
     if (p.lineDrag) {
       p.lineDrag = false;
-      p.checkParticle(particles);
+      p.checkParticle(sys1.particles);
     }
   }
 }
 
-//timeBar.step = 1 / 60;
-//timeBar.min = 1 / 60;
 timeBar.oninput = function () {
-  t = parseFloat(this.value);
-  console.log(t, typeof t)
+  sys1.t = parseFloat(this.value);
 }
 
 playButton.onmousedown = function () {
-  if (play == false) {
-    if (!started) {
-      for (let particle of particles) {
-        particle.setupParticle(15);
-        //console.log(particle.lineDist, particle.initialVel, particle.angle);
+  //let particlesConnected = true; 
+  if (sys1.play == false) {
+    if (!sys1.started) {
+      for (let particle of sys1.particles) {
+        if (particle.originPoint) {
+          particle.setupParticle(0);
+        }
       }
-      particle3.initialVel = 15;
-      started = true;
+      sys1.started = true;
     }
-    play = true;
+    sys1.play = true;
     
   }
 }
 
 pauseButton.onmousedown = function () {
-  if (play == true) {
-    play = false;
-    timeBar.value = t;
+  if (sys1.play == true) {
+    sys1.play = false;
+    timeBar.value = sys1.t;
   }
 }
 
 resetButton.onmousedown = function () {
-  reset = true;
+  sys1.play = false;
+  sys1.t = 0;
+  sys1.started = false;
+  timeBar.max = 0;
+  timeBar.min = 0;
 }
