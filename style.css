@@ -136,7 +136,7 @@ canvas {
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   border-style: none solid solid;
-  margin-left: 10px;
+  margin-left: 30px;
   width: 300px;
   background-color: #B4A6AE;
 }
@@ -146,6 +146,16 @@ canvas {
   font-size: 40px;
 }
 
-#objectsMenu.show {
+#objectsMenu.showCategories {
+  display: block;
+}
+
+.object {
+  display: none;
+  color: white;
+  font-size: 20px;
+}
+
+object.showObject {
   display: block;
 }

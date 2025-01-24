@@ -3,6 +3,7 @@ let playButton = document.getElementById("playButton");
 let pauseButton = document.getElementById("pauseButton");
 let resetButton = document.getElementById("resetButton");
 let objectsMenu = document.getElementById("objectsMenuButton");
+// let dropdownHeading = document.getElementById("dropdownHeading");
 
 timeBar.max = 0;
 timeBar.min = 0;
@@ -29,12 +30,20 @@ class System {
     let particleName = "particle " + particleID;
     particleElement.innerHTML = particleName;
     particleCategory.appendChild(particleElement);
+    particleElement.classList.add("object")
   }
 
   createPoint(x, y) {
-    let newPoint = new Point(this.points.length, this, x, y);
+    let pointID = this.points.length
+    let newPoint = new Point(pointID, this, x, y);
     this.points.push(newPoint);
     this.elements.push(newPoint);
+    const pointElement = document.createElement("div");
+    const pointCategory = document.getElementById("pointsContent")
+    let pointName = "point " + pointID;
+    pointElement.innerHTML = pointName;
+    pointCategory.appendChild(pointElement);
+    pointElement.classList.add("object")
   }
 
   randColour() {
@@ -333,5 +342,10 @@ resetButton.onmousedown = function () {
 
 objectsMenu.onclick = function () {
   let objectsMenu = document.getElementById("objectsMenu")
-  objectsMenu.classList.toggle("show");
+  objectsMenu.classList.toggle("showCategories");
 }
+
+// dropdownHeading.onclick = function () {
+//   let category = document.getElementById("objectsMenu")
+//   objectsMenu.classList.toggle("showObject");
+// }
