@@ -20,10 +20,15 @@ class System {
   }
 
   createParticle(x, y, colour) {
-    let newParticle = new Particle(this.particles.length, this, x, y, colour);
+    let particleID = this.particles.length
+    let newParticle = new Particle(particleID, this, x, y, colour);
     this.particles.push(newParticle);
     this.elements.push(newParticle);
-    
+    const particleElement = document.createElement("div");
+    const particleCategory = document.getElementById("particlesContent")
+    let particleName = "particle " + particleID;
+    particleElement.innerHTML = particleName;
+    particleCategory.appendChild(particleElement);
   }
 
   createPoint(x, y) {
