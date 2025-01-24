@@ -23,7 +23,6 @@ class System {
     let newParticle = new Particle(this.particles.length, this, x, y, colour);
     this.particles.push(newParticle);
     this.elements.push(newParticle);
-    
   }
 
   createPoint(x, y) {
