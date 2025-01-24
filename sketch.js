@@ -1,11 +1,11 @@
 let timeBar = document.getElementById("timeBar")
 let playButton = document.getElementById("playButton");
 let pauseButton = document.getElementById("pauseButton");
+let resetButton = document.getElementById("resetButton");
+let objectsMenu = document.getElementById("objectsMenuButton");
 
 timeBar.max = 0;
 timeBar.min = 0;
-
-let resetButton = document.getElementById("resetButton");
 
 class System {
   constructor(id) {
@@ -23,6 +23,7 @@ class System {
     let newParticle = new Particle(this.particles.length, this, x, y, colour);
     this.particles.push(newParticle);
     this.elements.push(newParticle);
+    
   }
 
   createPoint(x, y) {
@@ -39,7 +40,11 @@ class System {
   }
 
   resetSys() {
-
+    this.play = false;
+    this.t = 0;
+    this.started = false;
+    timeBar.max = 0;
+    timeBar.min = 0;
   }
 }
 
@@ -68,6 +73,12 @@ class Point {
         (this.endX - particle.x) ** 2 + (this.endY - particle.y) ** 2 <= particle.radius ** 2) {
         this.lineLocked = true;
         this.particle = particle;
+        if (this.particle.originPoint) { //gets rid of previous connection
+          this.particle.originPoint.particle = null;
+          this.particle.originPoint.lineLocked = false;
+          this.particle.originPoint.endX = this.particle.originPoint.x;
+          this.particle.originPoint.endY = this.particle.originPoint.y;
+        }
         this.particle.originPoint = this;
         this.endX = particle.x;
         this.endY = particle.y;
@@ -92,7 +103,7 @@ class Particle {
     this.radius = 12.5;
     this.originPoint = null
     this.angle = 0;
-    this.lineDist = 0;
+    this.lineDist = 0; //radius of circle
     this.initialVel = 0;
     this.initialAngle = 0;
     this.colour = colour;
@@ -312,9 +323,10 @@ pauseButton.onmousedown = function () {
 }
 
 resetButton.onmousedown = function () {
-  sys1.play = false;
-  sys1.t = 0;
-  sys1.started = false;
-  timeBar.max = 0;
-  timeBar.min = 0;
+  sys1.resetSys();
+}
+
+objectsMenu.onclick = function () {
+  let objectsMenu = document.getElementById("objectsMenu")
+  objectsMenu.classList.toggle("show");
 }

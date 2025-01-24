@@ -129,3 +129,23 @@ canvas {
   -webkit-user-select: none;
   -ms-user-select: none;
 }
+
+#objectsMenu {
+  display: none;
+  border: 3px solid black;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-style: none solid solid;
+  margin-left: 10px;
+  width: 300px;
+  background-color: #B4A6AE;
+}
+
+.dropdownHeading {
+  color: white;
+  font-size: 40px;
+}
+
+#objectsMenu.show {
+  display: block;
+}
