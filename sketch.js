@@ -3,6 +3,7 @@ let playButton = document.getElementById("playButton");
 let pauseButton = document.getElementById("pauseButton");
 let resetButton = document.getElementById("resetButton");
 let objectsMenu = document.getElementById("objectsMenuButton");
+// let dropdownHeading = document.getElementById("dropdownHeading");
 
 timeBar.max = 0;
 timeBar.min = 0;
@@ -20,15 +21,32 @@ class System {
   }
 
   createParticle(x, y, colour) {
-    let newParticle = new Particle(this.particles.length, this, x, y, colour);
+    let particleID = this.particles.length
+    let newParticle = new Particle(particleID, this, x, y, colour);
     this.particles.push(newParticle);
     this.elements.push(newParticle);
+<<<<<<< HEAD
+=======
+    const particleElement = document.createElement("div");
+    const particleCategory = document.getElementById("particlesContent")
+    let particleName = "particle " + particleID;
+    particleElement.innerHTML = particleName;
+    particleCategory.appendChild(particleElement);
+    particleElement.classList.add("object")
+>>>>>>> f2c85e80e77e3b5f2d10500ca03fcdc8ba7efce3
   }
 
   createPoint(x, y) {
-    let newPoint = new Point(this.points.length, this, x, y);
+    let pointID = this.points.length
+    let newPoint = new Point(pointID, this, x, y);
     this.points.push(newPoint);
     this.elements.push(newPoint);
+    const pointElement = document.createElement("div");
+    const pointCategory = document.getElementById("pointsContent")
+    let pointName = "point " + pointID;
+    pointElement.innerHTML = pointName;
+    pointCategory.appendChild(pointElement);
+    pointElement.classList.add("object")
   }
 
   randColour() {
@@ -327,5 +345,10 @@ resetButton.onmousedown = function () {
 
 objectsMenu.onclick = function () {
   let objectsMenu = document.getElementById("objectsMenu")
-  objectsMenu.classList.toggle("show");
+  objectsMenu.classList.toggle("showCategories");
 }
+
+// dropdownHeading.onclick = function () {
+//   let category = document.getElementById("objectsMenu")
+//   objectsMenu.classList.toggle("showObject");
+// }
