@@ -21,8 +21,8 @@
       <div id="toolbar">
         <div class="left">
           <input type="image" src="images/objectsColoured.png" id="objectsMenuButton" class="tool toolImgButton">
-          <input type="image" src="images/pointColoured.png" id="point" class="tool toolImgButton">
-          <input type="image" src="images/circleColoured.png" id="particle" class="tool toolImgButton">
+          <input type="image" src="images/pointColoured.png" id="createPointButton" class="tool toolImgButton">
+          <input type="image" src="images/circleColoured.png" id="createParticleButton" class="tool toolImgButton">
           <input type="image" src="images/surfaceColoured.png" id="surface" class="tool toolImgButton">     
         </div>
         <div class="right">
@@ -33,15 +33,54 @@
         </div>
       </div>
 
-      <div id="objectsMenu">
-        <div id="environmentHeading" class="dropdownHeading">Environment</div>
-        <div id="environmentContent"></div>
-        <div id="pointsHeading" class="dropdownHeading">Points</div>
-        <div id="pointsContent"></div>
-        <div id="particlesHeading" class="dropdownHeading">Particles</div>
-        <div id="particlesContent"></div>
-        <div id="surfacesHeading" class="dropdownHeading">Surfaces</div>
-        <div id="surfacesContent"></div>
+      <div id="objectsMenu" class="dropdownContent">
+        <div id="environmentContent">
+          <div id="environmentHeading" class="dropdownHeading">Environment</div>
+        </div> 
+        <div id="pointsContent">
+          <div id="pointsHeading" class="dropdownHeading">Points</div>
+        </div>   
+        <div id="particlesContent">
+          <div id="particlesHeading" class="dropdownHeading">Particles</div>
+        </div>
+
+        <div id="surfacesContent">
+          <div id="surfacesHeading" class="dropdownHeading">Surfaces</div>
+
+          <div id="surface-1" class="object showObject">
+
+            <p class="elementHeading">surface 1</p>
+
+            <div id="surface-controls-1" class="controls">
+              <p>radius</p>
+              <div class="radiusInput scrollInput">
+              <input type="range" min="0" max="100" value="100" class="controlSlider">
+              <p class="radiusValue scrollValue">2.273</p>
+              </div>
+
+              <p>length of wire</p>
+              <div class="lengthInput scrollInput">
+                <input type="range" min="0" max="100" value="100" class="controlSlider">
+                <p class="lengthValue scrollValue">2.273</p>
+              </div>
+
+              <p>angle</p>
+              <div class="angleInput textInput">
+                <input type="text">
+                <button>Set Angle</button>
+              </div>
+
+              <p>initialVelocity</p>
+              <div class="velocityInput textInput">
+                <input type="text">
+                <button>Set Velocity</button>
+              </div>
+
+            </div>
+            
+            
+          </div>
+        </div>
       </div>
 
       <div id="timeline">

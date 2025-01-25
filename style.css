@@ -3,6 +3,11 @@ html, body {
   padding: 0;
 }
 
+p {
+  margin: 0;
+  padding: 0;
+}
+
 canvas {
   display: block;
   /*setting canvas to be behind*/
@@ -131,6 +136,7 @@ canvas {
 }
 
 #objectsMenu {
+  overflow-y: scroll;
   display: none;
   border: 3px solid black;
   border-bottom-left-radius: 5px;
@@ -138,6 +144,7 @@ canvas {
   border-style: none solid solid;
   margin-left: 30px;
   width: 300px;
+  max-height: 650px;
   background-color: #B4A6AE;
 }
 
@@ -153,9 +160,35 @@ canvas {
 .object {
   display: none;
   color: white;
-  font-size: 20px;
+  font-size: 25px;
 }
 
-object.showObject {
+.object.showObject {
   display: block;
+}
+.scrollInput {
+  display: flex;
+}
+
+.controlSlider {
+  margin: 0;
+  width: 80%;
+}
+
+.scrollValue {
+  margin: 0;
+  width: 20%;
+}
+
+.controls {
+  display: none;
+  font-size: 15px;
+}
+
+.showControls {
+  display: block;
+}
+
+.elementHeading {
+  margin-bottom: 10px;
 }
