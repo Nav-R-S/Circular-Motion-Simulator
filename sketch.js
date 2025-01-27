@@ -120,13 +120,13 @@ class System {
   }
 
   particleCreation() {
-    if (this.particleCreationOn && mouseY > 100) {
+    if (this.particleCreationOn) {
       this.createParticle(mouseX, mouseY, this.randColour());
     }
   }
 
   pointCreation() {
-    if (this.pointCreationOn && mouseY > 100) {
+    if (this.pointCreationOn) {
       this.createPoint(mouseX, mouseY);
     }
   }
@@ -142,7 +142,7 @@ class System {
     createPointButton.classList.remove("toolbarButtonPressed");
   }
 
-  createControlsScrollInput(controlsContainer, title, min, max, initialVal, sliderFunction) {
+  createControlsScrollInput(controlsContainer, title, min, max, initialVal, sliderFunction, textboxFunction) {
     //everything as a string input
     let propertyTitle = document.createElement("p");
     propertyTitle.innerHTML = title;
@@ -166,6 +166,8 @@ class System {
     propertyInputContainer.appendChild(propertyInputBox);
 
     propertySlider.oninput = sliderFunction;
+    
+    propertyInputBox.oninput = textboxFunction;
   }
   // creates slider for object elements in menu
 
@@ -227,17 +229,18 @@ class System {
     particleCategory.onclick = () => {
       const particleContent = document.getElementById("particlesContent");
       let particleElementList = particleContent.children;
-      for (let i = 0; i < particleElementList.length; i++) {
-        if (this.particleCategoryOn) {
+
+      if (this.particleCategoryOn) {
+        this.particleCategoryOn = false;
+        for (let i = 0; i < particleElementList.length; i++) {
           particleElementList[i].classList.remove("showObject");
-          this.particleCategoryOn = false;
-        } else {
+        }
+      } else {     
+        this.particleCategoryOn = true;
+        for (let i = 0; i < particleElementList.length; i++) {
           particleElementList[i].classList.add("showObject");
-          this.particleCategoryOn = true;
-        }   
-        // console.log(this);
-        // particleElementList[i].classList.add("showObject");
-      }
+        }
+      }  
     };
     //toggles visibility of the particle elements when the heading is clicked
 
@@ -253,13 +256,47 @@ class System {
 
       let radiusSlider = (e) => {
         let particle = sys.particles[particleID];
-        particle.radius = e.target.value;
+        let sliderInput = e.target.value
+        let parentContainer = e.target.parentElement
+        let radiusTextBox =  parentContainer.children[1] // gets textbox which is second child of parent conatiner
+        particle.radius = sliderInput;
+        radiusTextBox.value = sliderInput;
       };
 
       let lineDistSlider = (e) => {
         let particle = sys.particles[particleID];
-        particle.lineDist = e.target.value
+        let sliderInput = e.target.value
+        let parentContainer = e.target.parentElement
+        let lineDistTextBox =  parentContainer.children[1] // gets textbox which is second child of parent conatiner
+        particle.lineDist = sliderInput;
+        lineDistTextBox.value = sliderInput;
       }
+
+      let radiusTextbox = (e) => {
+        let particle = sys.particles[particleID];
+        let textInput = e.target.value
+        let parentContainer = e.target.parentElement
+        let radiusSlider =  parentContainer.children[0]
+        if (!isNaN(textInput)) {
+          if (textInput <= 50 && textInput >= 0) {
+            particle.radius = textInput;
+            radiusSlider.value = textInput;
+          }
+        }
+      }
+
+      let lineDistTextbox = (e) => {
+        let particle = sys.particles[particleID];
+        let textInput = e.target.value
+        let parentContainer = e.target.parentElement
+        let lineDistSlider =  parentContainer.children[0]
+        if (!isNaN(textInput)) {
+          if (textInput <= 2000 && textInput >= 0) {
+            particle.lineDist = textInput;
+            lineDistSlider.value = textInput;
+          }
+        }
+      } 
 
       sys.createControlsScrollInput(
         controlsContainer,
@@ -267,15 +304,18 @@ class System {
         "1",
         "50",
         "12.5",
-        radiusSlider
+        radiusSlider,
+        radiusTextbox
       );
+
       sys.createControlsScrollInput(
         controlsContainer,
         "Line Radius",
         "0",
         "2000",
         sys.particles[particleID].lineDist,
-        lineDistSlider
+        lineDistSlider,
+        lineDistTextbox
       );
 
       sys.createControlsTextInput(
@@ -613,6 +653,8 @@ function mouseReleased() {
 }
 
 function mouseClicked() {
-  sys1.particleCreation()
-  sys1.pointCreation()
+  if (mouseY > 0) {
+    sys1.particleCreation()
+    sys1.pointCreation()
+  }
 }
