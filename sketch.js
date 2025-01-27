@@ -264,6 +264,9 @@ class System {
         let initialVelocityValue = textBox.value
         if (!isNaN(initialVelocityValue)) {
           console.log(initialVelocityValue);
+          particle.initialVel = parseFloat(initialVelocityValue);
+          sys.resetSys();
+          particle.initialAngle = particle.getAngleFromPos();
         }
         //console.log(initialAngleValue);
       }
