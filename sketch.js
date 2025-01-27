@@ -4,6 +4,7 @@ class System {
   constructor(id) {
     this.id = id;
     this.g = 9.81;
+    this.scale = 100;
     this.elements = [];
     this.points = [];
     this.particles = [];
@@ -63,33 +64,33 @@ class System {
       createPointButton.classList.toggle("toolbarButtonPressed");
     };
 
-    timeBar.oninput = function () {
-      sys1.t = parseFloat(this.value);
+    timeBar.oninput = () => {
+      this.t = parseFloat(timeBar.value);
     };
 
-    playButton.onmousedown = function () {
-      if (sys1.play == false) {
-        if (!sys1.started) {
-          for (let particle of sys1.particles) {
+    playButton.onmousedown = () => {
+      if (this.play == false) {
+        if (!this.started) {
+          for (let particle of this.particles) {
             if (particle.originPoint) {
               particle.setupParticle(0);
             }
           }
-          sys1.started = true;
+          this.started = true;
         }
-        sys1.play = true;
+        this.play = true;
       }
     };
 
-    pauseButton.onmousedown = function () {
-      if (sys1.play == true) {
-        sys1.play = false;
-        timeBar.value = sys1.t;
+    pauseButton.onmousedown = () => {
+      if (this.play == true) {
+        this.play = false;
+        timeBar.value = this.t;
       }
     };
 
     resetButton.onmousedown = () => {
-      sys1.resetSys();
+      this.resetSys();
       resetButton.src = "images/resetButtonColouredPressed.png";
       resetButton.classList.toggle("toolbarButtonPressed");
     };
@@ -171,7 +172,7 @@ class System {
   }
   // creates slider for object elements in menu
 
-  createControlsTextInput(controlsContainer, title, buttonText) {
+  createControlsTextInput(controlsContainer, title, buttonText, submitButtonFunction) {
     let propertyTitle = document.createElement("p");
     propertyTitle.innerHTML = title;
     controlsContainer.appendChild(propertyTitle);
@@ -189,6 +190,8 @@ class System {
     propertyInputButton.innerHTML = buttonText;
     propertyInputBox.classList.add("controlsInputButton");
     propertyInputContainer.appendChild(propertyInputButton);
+
+    propertyInputButton.onclick = submitButtonFunction;
   }
   // creates textbox and submit button for object elements in menu
 
@@ -253,6 +256,29 @@ class System {
       let controlsContainer = document.createElement("div");
       controlsContainer.classList.add("controls");
       particleElement.appendChild(controlsContainer);
+
+      let initialVelocitySubmit = (e) => {
+        let particle = sys.particles[particleID];
+        let parentContainer = e.target.parentElement;
+        let textBox = parentContainer.children[0]; //text box is the first element under the parent
+        let initialVelocityValue = textBox.value
+        if (!isNaN(initialVelocityValue)) {
+          console.log(initialVelocityValue);
+        }
+        //console.log(initialAngleValue);
+      }
+
+      let initialAngleSubmit = (e) => {
+        let particle = sys.particles[particleID];
+        let parentContainer = e.target.parentElement;
+        let textBox = parentContainer.children[0]; //text box is the first element under the parent
+        let initialAngleValue = textBox.value
+        if (!isNaN(initialAngleValue) && initialAngleValue <= (2 * Math.PI) && initialAngleValue >= 0) {
+          console.log(initialAngleValue);
+          //particle.initialAngle = initialAngleValue;
+        }
+        //console.log(initialAngleValue);
+      }
 
       let radiusSlider = (e) => {
         let particle = sys.particles[particleID];
@@ -321,12 +347,15 @@ class System {
       sys.createControlsTextInput(
         controlsContainer,
         "Initial Angle",
-        "Set Angle"
+        "Set Angle",
+        initialAngleSubmit
       );
+
       sys.createControlsTextInput(
         controlsContainer,
         "Initial Velocity",
-        "Set Velocity"
+        "Set Velocity",
+        initialVelocitySubmit
       );
     }
 
@@ -336,7 +365,7 @@ class System {
       let controls = childList[1];
       controls.classList.toggle("showControls");
     };
-  }
+  };
 
   createPoint(x, y) {
     let pointID = this.points.length;
@@ -478,7 +507,7 @@ class Particle {
   }
 
   rodMovement(t) {
-    this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / 50), 0.0025, this.sys.g, (this.lineDist / 50));
+    this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
     this.x = this.originPoint.x + this.lineDist * Math.sin(this.angle);
     this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
   }
