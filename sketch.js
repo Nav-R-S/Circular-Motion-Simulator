@@ -13,6 +13,8 @@ class System {
 
     this.particleCreationOn = false;
     this.pointCreationOn = false;
+    this.objectsMenuOpen = false;
+    this.particleCategoryOn = false;
   }
 
   setup() {
@@ -20,7 +22,7 @@ class System {
     let playButton = document.getElementById("playButton");
     let pauseButton = document.getElementById("pauseButton");
     let resetButton = document.getElementById("resetButton");
-    let objectsMenu = document.getElementById("objectsMenuButton");
+    let objectsMenuButton = document.getElementById("objectsMenuButton");
     let createParticleButton = document.getElementById("createParticleButton");
     let createPointButton = document.getElementById("createPointButton");
 
@@ -36,21 +38,29 @@ class System {
     };
 
     let createNewParticle = () => {
+      createParticleButton = document.getElementById("createParticleButton");
       if (this.particleCreationOn) {
+        createParticleButton.src = "images/circleColoured.png";
         this.particleCreationOn = false;
       } else {
         this.creationReset();
+        createParticleButton.src = "images/circleColouredPressed.png";
         this.particleCreationOn = true;
       }
+      createParticleButton.classList.toggle("toolbarButtonPressed");
     };
 
     let createNewPoint = () => {
+      createPointButton = document.getElementById("createPointButton");
       if (this.pointCreationOn) {
+        createPointButton.src = "images/pointColoured.png";
         this.pointCreationOn = false;
       } else {
         this.creationReset();
+        createPointButton.src = "images/pointColouredPressed.png";
         this.pointCreationOn = true;
       }
+      createPointButton.classList.toggle("toolbarButtonPressed");
     };
 
     timeBar.oninput = function () {
@@ -78,24 +88,45 @@ class System {
       }
     };
 
-    resetButton.onmousedown = function () {
+    resetButton.onmousedown = () => {
       sys1.resetSys();
+      resetButton.src = "images/resetButtonColouredPressed.png";
+      resetButton.classList.toggle("toolbarButtonPressed");
     };
 
-    objectsMenu.onclick = function () {
+    resetButton.onmouseup = () => {
+      resetButton.src = "images/resetButtonColoured.png";
+      resetButton.classList.toggle("toolbarButtonPressed");
+    }
+
+    objectsMenuButton.onclick = () => {
+      let sys = this;
+      creationValuesReset()
+      if (sys.objectsMenuOpen) {
+        objectsMenuButton.src = "images/objectsColoured.png";
+        sys.objectsMenuOpen = false;
+      } else {
+        objectsMenuButton.src = "images/objectsColouredPressed.png";
+        sys.objectsMenuOpen = true;
+      }
       let objectsMenu = document.getElementById("objectsMenu");
       objectsMenu.classList.toggle("showCategories");
+      objectsMenuButton.classList.toggle("toolbarButtonPressed");
     };
+
+    let creationValuesReset = () => {
+      this.creationReset()
+    }
   }
 
   particleCreation() {
-    if (this.particleCreationOn) {
+    if (this.particleCreationOn && mouseY > 100) {
       this.createParticle(mouseX, mouseY, this.randColour());
     }
   }
 
   pointCreation() {
-    if (this.pointCreationOn) {
+    if (this.pointCreationOn && mouseY > 100) {
       this.createPoint(mouseX, mouseY);
     }
   }
@@ -103,9 +134,15 @@ class System {
   creationReset() {
     this.particleCreationOn = false;
     this.pointCreationOn = false;
+    let createParticleButton = document.getElementById("createParticleButton");
+    let createPointButton = document.getElementById("createPointButton");
+    createParticleButton.src = "images/circleColoured.png";
+    createPointButton.src = "images/pointColoured.png";
+    createParticleButton.classList.remove("toolbarButtonPressed");
+    createPointButton.classList.remove("toolbarButtonPressed");
   }
 
-  createControlsScrollInput(controlsContainer, title, min, max) {
+  createControlsScrollInput(controlsContainer, title, min, max, initialVal, sliderFunction) {
     //everything as a string input
     let propertyTitle = document.createElement("p");
     propertyTitle.innerHTML = title;
@@ -119,6 +156,7 @@ class System {
     propertySlider.type = "range";
     propertySlider.min = min;
     propertySlider.max = max;
+    propertySlider.value = initialVal;
     propertySlider.classList.add("controlSlider");
     propertyInputContainer.appendChild(propertySlider);
 
@@ -126,6 +164,8 @@ class System {
     propertyInputBox.type = "text";
     propertyInputBox.classList.add("controlsInputBox");
     propertyInputContainer.appendChild(propertyInputBox);
+
+    propertySlider.oninput = sliderFunction;
   }
   // creates slider for object elements in menu
 
@@ -184,11 +224,19 @@ class System {
     //creates a html element for particle and the particle heading
 
     const particleCategory = document.getElementById("particlesHeading");
-    particleCategory.onclick = function () {
+    particleCategory.onclick = () => {
       const particleContent = document.getElementById("particlesContent");
       let particleElementList = particleContent.children;
       for (let i = 0; i < particleElementList.length; i++) {
-        particleElementList[i].classList.toggle("showObject");
+        if (this.particleCategoryOn) {
+          particleElementList[i].classList.remove("showObject");
+          this.particleCategoryOn = false;
+        } else {
+          particleElementList[i].classList.add("showObject");
+          this.particleCategoryOn = true;
+        }   
+        // console.log(this);
+        // particleElementList[i].classList.add("showObject");
       }
     };
     //toggles visibility of the particle elements when the heading is clicked
@@ -198,23 +246,36 @@ class System {
     function createParticleControls(particleElement, sys) {
       let particleElementList = particleElement.id.split("-");
       particleID = particleElementList[particleElementList.length - 1];
-      //console.log(particleElementList,particleID);
 
       let controlsContainer = document.createElement("div");
       controlsContainer.classList.add("controls");
       particleElement.appendChild(controlsContainer);
 
+      let radiusSlider = (e) => {
+        let particle = sys.particles[particleID];
+        particle.radius = e.target.value;
+      };
+
+      let lineDistSlider = (e) => {
+        let particle = sys.particles[particleID];
+        particle.lineDist = e.target.value
+      }
+
       sys.createControlsScrollInput(
         controlsContainer,
         "Particle Radius",
-        "0",
-        "10"
+        "1",
+        "50",
+        "12.5",
+        radiusSlider
       );
       sys.createControlsScrollInput(
         controlsContainer,
         "Line Radius",
         "0",
-        "2000"
+        "2000",
+        sys.particles[particleID].lineDist,
+        lineDistSlider
       );
 
       sys.createControlsTextInput(
@@ -275,12 +336,7 @@ class System {
       controlsContainer.classList.add("controls");
       pointElement.appendChild(controlsContainer);
 
-      sys.createControlsScrollInput(
-        controlsContainer,
-        "Point Radius",
-        "0",
-        "10"
-      );
+      //sys.createControlsScrollInput(controlsContainer, "Point Radius", "0", "10");
       sys.createControlsCheckbox(controlsContainer, "Collisions");
     }
 
@@ -418,10 +474,6 @@ class Particle {
 sys1 = new System(1)
 sysList.push(sys1)
 sys1.setup();
-sys1.createParticle(100, 100, sys1.randColour());
-sys1.createPoint(100, 200);
-sys1.createParticle(200, 100, sys1.randColour());
-sys1.createPoint(200,200);
 
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight - 105);
