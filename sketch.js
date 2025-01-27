@@ -73,7 +73,7 @@ class System {
         if (!this.started) {
           for (let particle of this.particles) {
             if (particle.originPoint) {
-              particle.setupParticle(0);
+              particle.setupParticle(particle.initialVel, particle.initialAngle, particle.lineDist);
             }
           }
           this.started = true;
@@ -275,7 +275,10 @@ class System {
         let initialAngleValue = textBox.value
         if (!isNaN(initialAngleValue) && initialAngleValue <= (2 * Math.PI) && initialAngleValue >= 0) {
           console.log(initialAngleValue);
-          //particle.initialAngle = initialAngleValue;
+          particle.initialAngle = parseFloat(initialAngleValue);
+          particle.angle = parseFloat(initialAngleValue);
+          sys.resetSys();
+          particle.updatePosition();
         }
         //console.log(initialAngleValue);
       }
@@ -469,7 +472,7 @@ class Point {
         this.particle.originPoint = this;
         this.endX = particle.x;
         this.endY = particle.y;
-        this.particle.setupParticle(0);
+        this.particle.setupParticle();
         this.sys.resetSys();
       }
     }
@@ -494,40 +497,51 @@ class Particle {
     this.initialVel = 0;
     this.initialAngle = 0;
     this.colour = colour;
-  }
+  };
+
   draw() {
     strokeWeight(2);
     fill(this.colour[0], this.colour[1], this.colour[2]);
     circle(this.x, this.y, 2 * this.radius);
-  }
+  };
 
   update(t) {
     //this.rodMovement(t);
     this.updateRod(t);
-  }
+  };
 
   rodMovement(t) {
     this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
+    this.updatePosition()
+  };
+
+  updatePosition() {
     this.x = this.originPoint.x + this.lineDist * Math.sin(this.angle);
     this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
-  }
+    this.originPoint.endX = this.x;
+    this.originPoint.endY = this.y;
+  };
 
   updateRod(t) {
     if (this.originPoint) {
       if (this.originPoint.lineLocked) {
         this.rodMovement(t);
-        this.originPoint.endX = this.x;
-        this.originPoint.endY = this.y;
+        // this.originPoint.endX = this.x;
+        // this.originPoint.endY = this.y;
       }
     }
     
-  }
+  };
 
-  setupParticle(initialVel) {
+  setupParticle(initialVel = 0, initialAngle = 0, initialLineDist = 0) {
     this.initialVel = initialVel;
-    this.getAngleFromPos();
-    this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y); 
-  }
+    if (initialAngle == 0) {
+      this.getAngleFromPos();
+    }
+    if (initialLineDist == 0) {
+      this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y);
+    }    
+  };
 
   getAngleFromPos() {
     let gradient = (this.y - this.originPoint.y) / (this.x - this.originPoint.x); //gradient = tan of angle from positive x axis
@@ -565,6 +579,7 @@ function f2(t, theta, u, g, len) {
 
 // thetadot = u
 function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
+  console.log(t0, tf, theta0, thetaDot0, h, g, len);
   let n = parseInt((tf - t0) / h, 10);
   let k1t, k2t, k3t, k4t, k1u, k2u, k3u, k4u;
   let theta = theta0;
