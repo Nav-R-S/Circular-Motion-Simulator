@@ -138,22 +138,24 @@ canvas {
 #objectsMenu {
   overflow-y: scroll;
   display: none;
-  border: 3px solid black;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border: 3px solid rgb(74, 78, 105);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
   border-style: none solid solid;
   margin-left: 30px;
   width: 300px;
   max-height: 70%;
-  background-color: rgba(180, 166, 174, 0.95);
+  background-color: rgba(154, 140, 152, 0.8);
 }
 
 #objectsMenu::-webkit-scrollbar {
   background-color: transparent;
+  width: 10px;
 }
 
 #objectsMenu::-webkit-scrollbar-thumb {
-  background-color: rgb(97,93,108);
+  
+  background-color: rgba(34, 34, 59, 0.5);
   border-radius: 10px;
 }
 
@@ -179,9 +181,19 @@ canvas {
   display: flex;
 }
 
-.controlSlider {
+.controlsSlider {
   margin: 0;
   width: 80%;
+}
+
+.controlsInputBox {
+  margin: 0;
+  width: 20%;
+}
+
+.textInput .controlsInputBox {
+  margin: 0;
+  width: 60%;
 }
 
 .scrollValue {

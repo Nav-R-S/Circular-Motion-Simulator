@@ -1,5 +1,7 @@
 sysList = [];
 
+window.addEventListener(`contextmenu`, (e) => e.preventDefault());
+
 class System {
   constructor(id) {
     this.id = id;
@@ -158,7 +160,7 @@ class System {
     propertySlider.min = min;
     propertySlider.max = max;
     propertySlider.value = initialVal;
-    propertySlider.classList.add("controlSlider");
+    propertySlider.classList.add("controlsSlider");
     propertyInputContainer.appendChild(propertySlider);
 
     let propertyInputBox = document.createElement("input");
@@ -261,30 +263,30 @@ class System {
         let particle = sys.particles[particleID];
         let parentContainer = e.target.parentElement;
         let textBox = parentContainer.children[0]; //text box is the first element under the parent
-        let initialVelocityValue = textBox.value
+        let initialVelocityValue = textBox.value;
         if (!isNaN(initialVelocityValue)) {
-          console.log(initialVelocityValue);
           particle.initialVel = parseFloat(initialVelocityValue);
           sys.resetSys();
           particle.initialAngle = particle.getAngleFromPos();
-        }
-        //console.log(initialAngleValue);
-      }
+        } else {
+          textBox.value = particle.initialVel;
+        };
+      };
 
       let initialAngleSubmit = (e) => {
         let particle = sys.particles[particleID];
         let parentContainer = e.target.parentElement;
         let textBox = parentContainer.children[0]; //text box is the first element under the parent
-        let initialAngleValue = textBox.value
+        let initialAngleValue = textBox.value;
         if (!isNaN(initialAngleValue) && initialAngleValue <= (2 * Math.PI) && initialAngleValue >= 0) {
-          console.log(initialAngleValue);
           particle.initialAngle = parseFloat(initialAngleValue);
           particle.angle = parseFloat(initialAngleValue);
           sys.resetSys();
           particle.updatePosition();
-        }
-        //console.log(initialAngleValue);
-      }
+        } else {
+          textBox.value = particle.initialAngle;
+        };
+      };
 
       let radiusSlider = (e) => {
         let particle = sys.particles[particleID];
@@ -299,36 +301,36 @@ class System {
         let particle = sys.particles[particleID];
         let sliderInput = e.target.value
         let parentContainer = e.target.parentElement
-        let lineDistTextBox =  parentContainer.children[1] // gets textbox which is second child of parent conatiner
+        let lineDistTextBox = parentContainer.children[1] // gets textbox which is second child of parent conatiner
         particle.lineDist = sliderInput;
         lineDistTextBox.value = sliderInput;
-      }
+      };
 
       let radiusTextbox = (e) => {
         let particle = sys.particles[particleID];
-        let textInput = e.target.value
-        let parentContainer = e.target.parentElement
-        let radiusSlider =  parentContainer.children[0]
+        let textInput = e.target.value;
+        let parentContainer = e.target.parentElement;
+        let radiusSlider = parentContainer.children[0];
         if (!isNaN(textInput)) {
           if (textInput <= 50 && textInput >= 0) {
             particle.radius = textInput;
             radiusSlider.value = textInput;
-          }
-        }
-      }
+          };
+        };
+      };
 
       let lineDistTextbox = (e) => {
         let particle = sys.particles[particleID];
-        let textInput = e.target.value
-        let parentContainer = e.target.parentElement
-        let lineDistSlider =  parentContainer.children[0]
+        let textInput = e.target.value;
+        let parentContainer = e.target.parentElement;
+        let lineDistSlider = parentContainer.children[0];
         if (!isNaN(textInput)) {
           if (textInput <= 2000 && textInput >= 0) {
             particle.lineDist = textInput;
             lineDistSlider.value = textInput;
-          }
-        }
-      } 
+          };
+        };
+      };
 
       sys.createControlsScrollInput(
         controlsContainer,
@@ -363,7 +365,7 @@ class System {
         "Set Velocity",
         initialVelocitySubmit
       );
-    }
+    };
 
     particleNameDisplay.onclick = function () {
       let particleElement = this.parentElement;
@@ -397,7 +399,7 @@ class System {
       let pointElementList = pointContent.children;
       for (let i = 0; i < pointElementList.length; i++) {
         pointElementList[i].classList.toggle("showObject");
-      }
+      };
     };
     //toggles visibility of the point elements when the heading is clicked
 
@@ -413,7 +415,7 @@ class System {
 
       //sys.createControlsScrollInput(controlsContainer, "Point Radius", "0", "10");
       sys.createControlsCheckbox(controlsContainer, "Collisions");
-    }
+    };
 
     pointNameDisplay.onclick = function () {
       let pointElement = this.parentElement;
@@ -421,14 +423,14 @@ class System {
       let controls = childList[1];
       controls.classList.toggle("showControls");
     };
-  }
+  };
 
   randColour() {
     let r = Math.floor(Math.random() * 255);
     let g = Math.floor(Math.random() * 255);
     let b = Math.floor(Math.random() * 255);
     return [r, g, b];
-  }
+  };
 
   resetSys() {
     this.play = false;
@@ -436,8 +438,8 @@ class System {
     this.started = false;
     timeBar.max = 0;
     timeBar.min = 0;
-  }
-}
+  };
+};
 
 class Point {
   constructor(id, sys, x, y) {
@@ -452,14 +454,14 @@ class Point {
     this.lineDrag = false;
     this.lineLocked = false;
     this.particle = null;
-  }
+  };
   draw() {
     strokeWeight(2);
     line(this.x, this.y, this.endX, this.endY);
     strokeWeight(4);
     fill(255, 255, 255);
     circle(this.x, this.y, 2 * this.radius);
-  }
+  };
   checkParticle(particleList) {
     for (let particle of particleList) {
       if (
@@ -471,20 +473,20 @@ class Point {
           this.particle.originPoint.lineLocked = false;
           this.particle.originPoint.endX = this.particle.originPoint.x;
           this.particle.originPoint.endY = this.particle.originPoint.y;
-        }
+        };
         this.particle.originPoint = this;
         this.endX = particle.x;
         this.endY = particle.y;
         this.particle.setupParticle();
         this.sys.resetSys();
-      }
-    }
+      };
+    };
     if (this.lineLocked == false) {
       this.endX = this.x;
       this.endY = this.y;
-    }
-  }
-}
+    };
+  };
+};
 
 class Particle {
   constructor(id, sys, x, y, colour) {
@@ -529,11 +531,8 @@ class Particle {
     if (this.originPoint) {
       if (this.originPoint.lineLocked) {
         this.rodMovement(t);
-        // this.originPoint.endX = this.x;
-        // this.originPoint.endY = this.y;
-      }
-    }
-    
+      };
+    };
   };
 
   setupParticle(initialVel = 0, initialAngle = 0, initialLineDist = 0) {
@@ -582,7 +581,6 @@ function f2(t, theta, u, g, len) {
 
 // thetadot = u
 function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
-  console.log(t0, tf, theta0, thetaDot0, h, g, len);
   let n = parseInt((tf - t0) / h, 10);
   let k1t, k2t, k3t, k4t, k1u, k2u, k3u, k4u;
   let theta = theta0;
