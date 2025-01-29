@@ -92,7 +92,6 @@ class System {
     };
 
     resetButton.onmousedown = () => {
-      this.resetSys();
       resetButton.src = "images/resetButtonColouredPressed.png";
       resetButton.classList.toggle("toolbarButtonPressed");
     };
@@ -100,6 +99,16 @@ class System {
     resetButton.onmouseup = () => {
       resetButton.src = "images/resetButtonColoured.png";
       resetButton.classList.toggle("toolbarButtonPressed");
+    }
+
+    resetButton.onclick = () => {
+      this.resetSys();
+      for (let particle of this.particles) {
+        if (particle.originPoint) {
+          particle.angle = particle.initialAngle;
+          particle.updatePosition();
+        }
+      }
     }
 
     objectsMenuButton.onclick = () => {
@@ -464,8 +473,7 @@ class Point {
   };
   checkParticle(particleList) {
     for (let particle of particleList) {
-      if (
-        (this.endX - particle.x) ** 2 + (this.endY - particle.y) ** 2 <= particle.radius ** 2) {
+      if ((this.endX - particle.x) ** 2 + (this.endY - particle.y) ** 2 <= particle.radius ** 2) {
         this.lineLocked = true;
         this.particle = particle;
         if (this.particle.originPoint) { //gets rid of previous connection
@@ -650,6 +658,12 @@ function mouseDragged() {
     if (e.drag) {
       e.x = mouseX;
       e.y = mouseY;
+      if (!sys1.play && sys1.particles.includes(e)) {
+        if (e.originPoint) { // checks to see if it is a connected particle
+          sys1.resetSys();
+          e.setupParticle(e.initialVel, 0, 0); //initial velocity kept same
+        }
+      }
     }
   }
   for (let p of sys1.points) {
@@ -670,10 +684,10 @@ function mouseDragged() {
 
 function mousePressed() {
   for (let e of sys1.elements) {
-    if ((mouseX - e.x) ** 2 + (mouseY - e.y) ** 2 <= e.radius ** 2) {
+    if ((mouseX - e.x) ** 2 + (mouseY - e.y) ** 2 <= e.radius ** 2) { //checks if distance between mouse and element < element radius (ie element clicked)
       if (mouseButton === LEFT) {
         e.drag = true;
-      } else if (sys1.points.includes(e) && mouseButton === RIGHT) {
+      } else if (sys1.points.includes(e) && mouseButton === RIGHT) { //if a point is rightclicked
         e.lineDrag = true;
         e.lineLocked = false;
         if (e.particle) { //checks if connected to a particle --> if so then gets rid of conenction
@@ -688,6 +702,7 @@ function mousePressed() {
 function mouseReleased() {
   for (let e of sys1.elements) {
     e.drag = false;
+    
   }
   for (let p of sys1.points) {
     if (p.lineDrag) {
