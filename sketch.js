@@ -547,6 +547,7 @@ class Particle {
     this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
     this.originPoint.endX = this.x;
     this.originPoint.endY = this.y;
+    this.sys.addToGrid(this);
   };
 
   updateRod(t) {
