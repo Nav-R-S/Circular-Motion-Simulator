@@ -18,6 +18,9 @@ class System {
     this.pointCreationOn = false;
     this.objectsMenuOpen = false;
     this.particleCategoryOn = false;
+
+    this.grid = {};
+    this.gridSize = null;
   }
 
   setup() {
@@ -131,6 +134,17 @@ class System {
     }
   }
 
+  addToGrid(obj) {
+    let col = floor(obj.x / this.gridSize);
+    let row = floor(obj.y / this.gridSize);
+    let key = `${col},${row}`;  // Unique key for each cell
+  
+    if (!this.grid[key]) {
+      this.grid[key] = [];
+    }
+    this.grid[key].push(obj);
+  }
+
   particleCreation() {
     if (this.particleCreationOn) {
       this.createParticle(mouseX, mouseY, this.randColour());
@@ -157,7 +171,7 @@ class System {
   createControlsScrollInput(controlsContainer, title, min, max, initialVal, sliderFunction, textboxFunction) {
     //everything as a string input
     let propertyTitle = document.createElement("p");
-    propertyTitle.innerHTML = title;
+    propertyTitle.textContent = title;
     controlsContainer.appendChild(propertyTitle);
 
     let propertyInputContainer = document.createElement("div");
@@ -185,7 +199,7 @@ class System {
 
   createControlsTextInput(controlsContainer, title, buttonText, submitButtonFunction) {
     let propertyTitle = document.createElement("p");
-    propertyTitle.innerHTML = title;
+    propertyTitle.textContent = title;
     controlsContainer.appendChild(propertyTitle);
 
     let propertyInputContainer = document.createElement("div");
@@ -198,7 +212,7 @@ class System {
     propertyInputContainer.appendChild(propertyInputBox);
 
     let propertyInputButton = document.createElement("button");
-    propertyInputButton.innerHTML = buttonText;
+    propertyInputButton.textContent = buttonText;
     propertyInputBox.classList.add("controlsInputButton");
     propertyInputContainer.appendChild(propertyInputButton);
 
@@ -208,7 +222,7 @@ class System {
 
   createControlsCheckbox(controlsContainer, title) {
     let propertyTitle = document.createElement("p");
-    propertyTitle.innerHTML = title;
+    propertyTitle.textContent = title;
     controlsContainer.appendChild(propertyTitle);
 
     let propertyInputContainer = document.createElement("div");
@@ -235,7 +249,7 @@ class System {
     particleElement.id = "particle-" + particleID;
     particleContent.appendChild(particleElement);
     particleElement.classList.add("object");
-    particleNameDisplay.innerHTML = particleName;
+    particleNameDisplay.textContent = particleName;
     particleElement.appendChild(particleNameDisplay);
     //creates a html element for particle and the particle heading
 
@@ -398,7 +412,7 @@ class System {
     pointElement.id = "point-" + pointID;
     pointContent.appendChild(pointElement);
     pointElement.classList.add("object");
-    pointNameDisplay.innerHTML = pointName;
+    pointNameDisplay.textContent = pointName;
     pointElement.appendChild(pointNameDisplay);
     //creates a html element for point and point heading
 
