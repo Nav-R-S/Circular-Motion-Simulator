@@ -69,7 +69,7 @@ class System {
         this.creationReset();
         createPointButton.src = "images/pointColouredPressed.png";
         this.pointCreationOn = true;
-      }
+      };
       createPointButton.classList.toggle("toolbarButtonPressed");
     };
 
@@ -83,19 +83,19 @@ class System {
           for (let particle of this.particles) {
             if (particle.originPoint) {
               particle.setupParticle(particle.initialVel, particle.initialAngle, particle.lineDist);
-            }
-          }
+            };
+          };
           this.started = true;
-        }
+        };
         this.play = true;
-      }
+      };
     };
 
     pauseButton.onmousedown = () => {
       if (this.play == true) {
         this.play = false;
         timeBar.value = this.t;
-      }
+      };
     };
 
     resetButton.onmousedown = () => {
@@ -106,7 +106,7 @@ class System {
     resetButton.onmouseup = () => {
       resetButton.src = "images/resetButtonColoured.png";
       resetButton.classList.toggle("toolbarButtonPressed");
-    }
+    };
 
     resetButton.onclick = () => {
       this.resetSys();
@@ -114,9 +114,9 @@ class System {
         if (particle.originPoint) {
           particle.angle = particle.initialAngle;
           particle.updatePosition();
-        }
-      }
-    }
+        };
+      };
+    };
 
     objectsMenuButton.onclick = () => {
       let sys = this;
@@ -127,7 +127,7 @@ class System {
       } else {
         objectsMenuButton.src = "images/objectsColouredPressed.png";
         sys.objectsMenuOpen = true;
-      }
+      };
       let objectsMenu = document.getElementById("objectsMenu");
       objectsMenu.classList.toggle("showCategories");
       objectsMenuButton.classList.toggle("toolbarButtonPressed");
@@ -135,11 +135,11 @@ class System {
 
     let creationValuesReset = () => {
       this.creationReset()
-    }
+    };
 
     this.updateSysDimensions(window.innerWidth, window.innerHeight - 100);
     this.createGrid(this.width, this.height, this.gridSize);
-  }
+  };
 
   createGrid(w, h) {
     let cols = Math.ceil(w / this.gridSize);
@@ -147,82 +147,87 @@ class System {
     let smallestCol = Math.floor(this.smallestY / this.gridSize);
     let smallestRow = Math.floor(this.smallestX / this.gridSize);
 
-    console.log(cols, rows, smallestCol, smallestRow)
+    //console.log(cols, rows, smallestCol, smallestRow)
     //console.log(cols, rows, w, h);
 
-    let rowsNum = rows+(2*(Math.abs(smallestRow)))
-    let colsNum = cols+(2*(Math.abs(smallestCol)))
-    console.log(colsNum, rowsNum )
+    let rowsNum = rows + (2 * (Math.abs(smallestRow)))
+    let colsNum = cols + (2 * (Math.abs(smallestCol)))
+    
+    //console.log(colsNum, rowsNum )
 
     this.grid = new Array(rowsNum);
     for (let i = 0; i < rowsNum; i++) { //not right check when smallest row is
-      //console.log(i, "rows ran", rowsNum, this.grid.length)
       this.grid[i] = new Array(colsNum);
       for (let j = 0; j < colsNum; j++) {
-        //console.log(i, "rows ran", rowsNum, this.grid.length)
         this.grid[i][j] = [];
-      }
-    }
-  }
+      };
+    };
+  };
 
   addToGrid(obj) {
-    let smallestCol = Math.floor(this.smallestY);
-    let smallestRow = Math.floor(this.smallestX);
+    let smallestCol = Math.abs(Math.floor(this.smallestY / this.gridSize));
+    let smallestRow = Math.abs(Math.floor(this.smallestX / this.gridSize));
 
-    let row = Math.floor(obj.x / this.gridSize)  + this.smallestRow;
-    let col = Math.floor(obj.y / this.gridSize)  + this.smallestCol;
+    let row = Math.floor(obj.x / this.gridSize)  + smallestRow;
+    let col = Math.floor(obj.y / this.gridSize)  + smallestCol;
 
     //console.log(this.gridPos, "gridPos");
     // console.log(row, col, "row, col");
     // console.log(obj, "obj");
     // console.log(obj.gridPos, "gridPos");
 
+    
+    // console.log(row, col, "row, col");
+
     let prevX = obj.gridPos[0];
     let prevY = obj.gridPos[1];
+
+    // console.log(prevX, prevY, "prevX, prevY");
+    // console.log(this.grid[prevX][prevY], "grid[prevX][prevY]");
+
+
     this.grid[prevX][prevY] = this.grid[prevX][prevY].filter(element => element !== obj);
 
     this.grid[row][col].push(obj);
     obj.gridPos = [row, col];
-  }
+  };
 
-  // addToGrid(obj) {
-  //   let col = floor(obj.x / this.gridSize);
-  //   let row = floor(obj.y / this.gridSize);
-  //   let key = `${col}-${row}`;  // Unique key for each cell
-  
-  //   if (!this.grid[key]) {
-  //     this.grid[key] = [];
-  //   }
-  //   this.grid[key].push(obj);
-  //   console.log(this.grid[key]);
-  // }
+  checkCollisions(obj) {
+    let smallestCol = Math.abs(Math.floor(this.smallestY / this.gridSize));
+    let smallestRow = Math.abs(Math.floor(this.smallestX / this.gridSize));
 
-  // checkCollisions(obj) {
-  //   let col = floor(obj.x / this.gridSize);
-  //   let row = floor(obj.y / this.gridSize);
+    let objX = obj.gridPos[0];
+    let objY = obj.gridPos[1];
 
-  //   function checkCircleCollision(obj1, obj2) {
-  //     let dx = obj1.x - obj2.x;
-  //     let dy = obj1.y - obj2.y;
-  //     let distance = sqrt(dx * dx + dy * dy);
-  //     return distance < obj1.r + obj2.r;
-  //   }
-    
-  //   for (let i = -1; i <= 1; i++) {
-  //     for (let j = -1; j <= 1; j++) {
-  //       let key = `${col + i},${row + j}`;
-  //       if (this.grid[key]) {
-  //         for (let other of this.grid[key]) {
-  //           if (obj !== other && checkCircleCollision(obj, other)) {
-  //             stroke(255, 0, 0);
-  //             line(obj.x, obj.y, other.x, other.y); // Indicate a collision
-  //             console.log("Collision detected");
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        if ((objX + i) > 0 && (objY + j) > 0) {
+          let currentSquare = this.grid[objX + i][objY + j];
+          console.log(currentSquare, this.t, "currentSquare", i, j);
+          if (currentSquare.length > 0) {
+            for (let otherObj of currentSquare) {
+              if (obj !== otherObj && this.collisionDetection(obj, otherObj)) {
+                // stroke(255, 0, 0);
+                // line(obj.x, obj.y, other.x, other.y); // Indicate a collision
+                console.log("Collision detected");
+              }
+            }
+          }
+        };
+      };
+    };  
+  };
+
+  collisionDetection(obj1, obj2) {
+    let dx = obj1.x - obj2.x;
+    let dy = obj1.y - obj2.y;
+    let dist = sqrt(dx ** 2 + dy ** 2);
+    if (dist < obj1.r + obj2.r) {
+      return false;
+    } else {
+      return true;
+    };
+  };
 
   updateSysDimensions(w, h) {
     this.width = w;
@@ -622,7 +627,8 @@ class Particle {
     //this.rodMovement(t);
     this.updateRod(t);
     //this.sys.checkCollisions(this);
-    console.log(this.gridPos);
+    //console.log(this.gridPos, "update");
+    this.sys.checkCollisions(this);
   };
 
   rodMovement(t) {
@@ -658,7 +664,7 @@ class Particle {
     let row = floor(this.x / this.sys.gridSize);
     let col = floor(this.y / this.sys.gridSize);
     this.gridPos = [row, col];
-    console.log(this.gridPos, "gridPos");
+    //console.log(this.gridPos, "gridPos");
   };
 
   getAngleFromPos() {
@@ -680,6 +686,7 @@ function setup() {
   let cnv = createCanvas(windowWidth, windowHeight - 100);
   cnv.parent("canvas")
   cnv.position(0, 100);
+  frameRate(120);
 }
 
 function windowResized() {
