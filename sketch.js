@@ -1,6 +1,6 @@
 sysList = [];
 
-window.addEventListener(`contextmenu`, (e) => e.preventDefault());
+window.addEventListener(`contextmenu`, (e) => e.preventDefault()); // gets rid of context menu
 
 class System {
   constructor(id) {
@@ -23,6 +23,8 @@ class System {
     this.width;
     this.height;
     this.gridSize = 50;
+    this.smallestX = -2000
+    this.smallestY = -2000
   }
 
   setup() {
@@ -139,36 +141,47 @@ class System {
     this.createGrid(this.width, this.height, this.gridSize);
   }
 
-  createGrid(w, h, cellSize, smallestRow, smallestCol) {
-    let cols = Math.ceil(w / cellSize);
-    let rows = Math.ceil(h / cellSize);
+  createGrid(w, h) {
+    let cols = Math.ceil(w / this.gridSize);
+    let rows = Math.ceil(h / this.gridSize);
+    let smallestCol = Math.floor(this.smallestY / this.gridSize);
+    let smallestRow = Math.floor(this.smallestX / this.gridSize);
 
-    console.log(cols, rows, w, h);
-    this.grid = new Array(rows);
-    for (let i = smallestRow; i < rows; i++) { //not right check when smallest row is
-      this.grid[i] = new Array(cols);
-      for (let j = smallestCol; j < cols; j++) {
+    console.log(cols, rows, smallestCol, smallestRow)
+    //console.log(cols, rows, w, h);
+
+    let rowsNum = rows+(2*(Math.abs(smallestRow)))
+    let colsNum = cols+(2*(Math.abs(smallestCol)))
+    console.log(colsNum, rowsNum )
+
+    this.grid = new Array(rowsNum);
+    for (let i = 0; i < rowsNum; i++) { //not right check when smallest row is
+      //console.log(i, "rows ran", rowsNum, this.grid.length)
+      this.grid[i] = new Array(colsNum);
+      for (let j = 0; j < colsNum; j++) {
+        //console.log(i, "rows ran", rowsNum, this.grid.length)
         this.grid[i][j] = [];
       }
     }
-    return grid;
   }
 
   addToGrid(obj) {
-    let row = Math.floor(obj.x / this.gridSize);
-    let col = Math.floor(obj.y / this.gridSize);
+    let smallestCol = Math.floor(this.smallestY);
+    let smallestRow = Math.floor(this.smallestX);
+
+    let row = Math.floor(obj.x / this.gridSize)  + this.smallestRow;
+    let col = Math.floor(obj.y / this.gridSize)  + this.smallestCol;
 
     //console.log(this.gridPos, "gridPos");
-    console.log(row, col, "row, col");
-    console.log(obj, "obj");
-    console.log(obj.gridPos, "gridPos");
+    // console.log(row, col, "row, col");
+    // console.log(obj, "obj");
+    // console.log(obj.gridPos, "gridPos");
 
     let prevX = obj.gridPos[0];
     let prevY = obj.gridPos[1];
-    
     this.grid[prevX][prevY] = this.grid[prevX][prevY].filter(element => element !== obj);
-    this.grid[row][col].push(obj);
 
+    this.grid[row][col].push(obj);
     obj.gridPos = [row, col];
   }
 
