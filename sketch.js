@@ -19,8 +19,10 @@ class System {
     this.objectsMenuOpen = false;
     this.particleCategoryOn = false;
 
-    this.grid = {};
-    this.gridSize = null;
+    this.grid;
+    this.width;
+    this.height;
+    this.gridSize = 50;
   }
 
   setup() {
@@ -132,18 +134,87 @@ class System {
     let creationValuesReset = () => {
       this.creationReset()
     }
+
+    this.updateSysDimensions(window.innerWidth, window.innerHeight - 100);
+    this.createGrid(this.width, this.height, this.gridSize);
+  }
+
+  createGrid(w, h, cellSize, smallestRow, smallestCol) {
+    let cols = Math.ceil(w / cellSize);
+    let rows = Math.ceil(h / cellSize);
+
+    console.log(cols, rows, w, h);
+    this.grid = new Array(rows);
+    for (let i = smallestRow; i < rows; i++) { //not right check when smallest row is
+      this.grid[i] = new Array(cols);
+      for (let j = smallestCol; j < cols; j++) {
+        this.grid[i][j] = [];
+      }
+    }
+    return grid;
   }
 
   addToGrid(obj) {
-    let col = floor(obj.x / this.gridSize);
-    let row = floor(obj.y / this.gridSize);
-    let key = `${col},${row}`;  // Unique key for each cell
-  
-    if (!this.grid[key]) {
-      this.grid[key] = [];
-    }
-    this.grid[key].push(obj);
+    let row = Math.floor(obj.x / this.gridSize);
+    let col = Math.floor(obj.y / this.gridSize);
+
+    //console.log(this.gridPos, "gridPos");
+    console.log(row, col, "row, col");
+    console.log(obj, "obj");
+    console.log(obj.gridPos, "gridPos");
+
+    let prevX = obj.gridPos[0];
+    let prevY = obj.gridPos[1];
+    
+    this.grid[prevX][prevY] = this.grid[prevX][prevY].filter(element => element !== obj);
+    this.grid[row][col].push(obj);
+
+    obj.gridPos = [row, col];
   }
+
+  // addToGrid(obj) {
+  //   let col = floor(obj.x / this.gridSize);
+  //   let row = floor(obj.y / this.gridSize);
+  //   let key = `${col}-${row}`;  // Unique key for each cell
+  
+  //   if (!this.grid[key]) {
+  //     this.grid[key] = [];
+  //   }
+  //   this.grid[key].push(obj);
+  //   console.log(this.grid[key]);
+  // }
+
+  // checkCollisions(obj) {
+  //   let col = floor(obj.x / this.gridSize);
+  //   let row = floor(obj.y / this.gridSize);
+
+  //   function checkCircleCollision(obj1, obj2) {
+  //     let dx = obj1.x - obj2.x;
+  //     let dy = obj1.y - obj2.y;
+  //     let distance = sqrt(dx * dx + dy * dy);
+  //     return distance < obj1.r + obj2.r;
+  //   }
+    
+  //   for (let i = -1; i <= 1; i++) {
+  //     for (let j = -1; j <= 1; j++) {
+  //       let key = `${col + i},${row + j}`;
+  //       if (this.grid[key]) {
+  //         for (let other of this.grid[key]) {
+  //           if (obj !== other && checkCircleCollision(obj, other)) {
+  //             stroke(255, 0, 0);
+  //             line(obj.x, obj.y, other.x, other.y); // Indicate a collision
+  //             console.log("Collision detected");
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  updateSysDimensions(w, h) {
+    this.width = w;
+    this.height = h;
+  };
 
   particleCreation() {
     if (this.particleCreationOn) {
@@ -524,6 +595,8 @@ class Particle {
     this.initialVel = 0;
     this.initialAngle = 0;
     this.colour = colour;
+
+    this.gridPos = [];
   };
 
   draw() {
@@ -535,11 +608,13 @@ class Particle {
   update(t) {
     //this.rodMovement(t);
     this.updateRod(t);
+    //this.sys.checkCollisions(this);
+    console.log(this.gridPos);
   };
 
   rodMovement(t) {
     this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
-    this.updatePosition()
+    this.updatePosition();
   };
 
   updatePosition() {
@@ -565,7 +640,12 @@ class Particle {
     }
     if (initialLineDist == 0) {
       this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y);
-    }    
+    }
+
+    let row = floor(this.x / this.sys.gridSize);
+    let col = floor(this.y / this.sys.gridSize);
+    this.gridPos = [row, col];
+    console.log(this.gridPos, "gridPos");
   };
 
   getAngleFromPos() {
@@ -584,13 +664,14 @@ sysList.push(sys1)
 sys1.setup();
 
 function setup() {
-  let cnv = createCanvas(windowWidth, windowHeight - 105);
+  let cnv = createCanvas(windowWidth, windowHeight - 100);
   cnv.parent("canvas")
   cnv.position(0, 100);
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight-100);
+  resizeCanvas(windowWidth, windowHeight - 100);
+  //sys1.updateSysDimensions(window.innerWidth, window.innerHeight - 100);
 }
 
 function f1(t, theta, u) {
@@ -681,6 +762,7 @@ function mouseDragged() {
       }
     }
   }
+
   for (let p of sys1.points) {
     if (!p.lineLocked) {
       if (p.lineDrag) {
