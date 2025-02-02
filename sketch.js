@@ -1,6 +1,31 @@
 sysList = [];
 
-window.addEventListener(`contextmenu`, (e) => e.preventDefault()); // gets rid of context menu
+window.addEventListener(`contextmenu`, (e) => e.preventDefault()); // gets rid of context menu on right click
+
+class Vector {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.angle = this.getAngle();
+  };
+
+  getMagnitude() {
+    return Math.sqrt(this.x ** 2 + this.y ** 2);
+  };
+
+  getUnitVector() {
+    let mag = this.getMagnitude();
+    return new Vector(this.x / mag, this.y / mag);
+  };
+
+  getAngle() {
+    return Math.atan2(this.y, this.x); //returns the angle in the plane (in radians) between the positive x-axis and the ray from (0, 0) to the point (x, y)
+  };
+
+  getDotProduct(v) {
+    return this.x * v.x + this.y * v.y;
+  };
+};
 
 class System {
   constructor(id) {
@@ -23,8 +48,10 @@ class System {
     this.width;
     this.height;
     this.gridSize = 50;
-    this.smallestX = -2000
-    this.smallestY = -2000
+    this.smallestX = -2000;
+    this.smallestY = -2000;
+
+    this.coeffifientOfRestitution = 1;
   }
 
   setup() {
@@ -171,20 +198,8 @@ class System {
     let row = Math.floor(obj.x / this.gridSize)  + smallestRow;
     let col = Math.floor(obj.y / this.gridSize)  + smallestCol;
 
-    //console.log(this.gridPos, "gridPos");
-    // console.log(row, col, "row, col");
-    // console.log(obj, "obj");
-    // console.log(obj.gridPos, "gridPos");
-
-    
-    // console.log(row, col, "row, col");
-
     let prevX = obj.gridPos[0];
     let prevY = obj.gridPos[1];
-
-    // console.log(prevX, prevY, "prevX, prevY");
-    // console.log(this.grid[prevX][prevY], "grid[prevX][prevY]");
-
 
     this.grid[prevX][prevY] = this.grid[prevX][prevY].filter(element => element !== obj);
 
@@ -192,7 +207,7 @@ class System {
     obj.gridPos = [row, col];
   };
 
-  checkCollisions(obj) {
+  checkCollisions(obj) { //TODO handle edge cases-----------------------------------------------------------------------------------------------------
     let smallestCol = Math.abs(Math.floor(this.smallestY / this.gridSize));
     let smallestRow = Math.abs(Math.floor(this.smallestX / this.gridSize));
 
@@ -203,13 +218,13 @@ class System {
       for (let j = -1; j <= 1; j++) {
         if ((objX + i) > 0 && (objY + j) > 0) {
           let currentSquare = this.grid[objX + i][objY + j];
-          console.log(currentSquare, this.t, "currentSquare", i, j);
+          //console.log(currentSquare, this.t, "currentSquare", i, j);
           if (currentSquare.length > 0) {
             for (let otherObj of currentSquare) {
-              if (obj !== otherObj && this.collisionDetection(obj, otherObj)) {
-                // stroke(255, 0, 0);
-                // line(obj.x, obj.y, other.x, other.y); // Indicate a collision
-                console.log("Collision detected");
+              //console.log(obj.gridPos, otherObj.gridPos, "positions");
+              if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
+                console.log("Collision detected", this.t);
+                //console.log(obj.id, otherObj.id);
               }
             }
           }
@@ -218,16 +233,20 @@ class System {
     };  
   };
 
-  collisionDetection(obj1, obj2) {
+  checkIfCollisionDetected(obj1, obj2) {
     let dx = obj1.x - obj2.x;
     let dy = obj1.y - obj2.y;
     let dist = sqrt(dx ** 2 + dy ** 2);
-    if (dist < obj1.r + obj2.r) {
-      return false;
-    } else {
+    if (dist < obj1.radius + obj2.radius) { //checks if centres are closer than the sum of the radii (which shouldnt happen)
       return true;
+    } else {
+      return false;
     };
   };
+
+  handleCollision(obj1, obj2) {
+    
+  }
 
   updateSysDimensions(w, h) {
     this.width = w;
@@ -323,7 +342,7 @@ class System {
     propertyInputBox.classList.add("controlsCheckbox");
     propertyInputContainer.appendChild(propertyInputBox);
   }
-
+ 
   createParticle(x, y, colour) {
     let particleID = this.particles.length;
     let newParticle = new Particle(particleID, this, x, y, colour);
@@ -559,7 +578,12 @@ class Point {
     this.sys = sys
     this.x = x;
     this.y = y;
+
+    this.mass;
+    this.speed = 0;
+    //this.velocity = new Vector(0, 0);
     this.radius = 5;
+
     this.endX = x;
     this.endY = y;
     this.drag = false;
@@ -629,10 +653,23 @@ class Particle {
     //this.sys.checkCollisions(this);
     //console.log(this.gridPos, "update");
     this.sys.checkCollisions(this);
+    //this.updateVelocity();
   };
 
+  updateVelocity() { //not quite check resolvings
+    let velocity = this.angVelocity * (this.lineDist / this.sys.scale);
+    if (this.x < this.originPoint.x) {
+      this.velocity.angle = this.angle - (3 * Math.PI) / 2; //particle to left of point
+    } else {
+      this.velocity.angle = this.angle; //particle to right of point
+    }
+  }
+
   rodMovement(t) {
-    this.angle = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
+    let angAndAngVel = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
+    console.log(angAndAngVel, "rungeKutta");
+    this.angle = angAndAngVel[0];
+    this.angVelocity = angAndAngVel[1];
     this.updatePosition();
   };
 
@@ -668,6 +705,10 @@ class Particle {
   };
 
   getAngleFromPos() {
+    // let vec = new Vector(this.x - this.originPoint.x, this.y - this.originPoint.y);
+    // console.log(vec.x, vec.y, "vec");
+    // this.initialAngle = -1 * vec.getAngle() + Math.PI / 2;
+    // console.log(this.initialAngle, "initialAngle");
     let gradient = (this.y - this.originPoint.y) / (this.x - this.originPoint.x); //gradient = tan of angle from positive x axis
     if (this.x < this.originPoint.x) {
       this.initialAngle = 3*Math.PI / 2 - Math.atan(gradient); //particle to left of point
@@ -708,7 +749,7 @@ function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
   let n = parseInt((tf - t0) / h, 10);
   let k1t, k2t, k3t, k4t, k1u, k2u, k3u, k4u;
   let theta = theta0;
-  let u = thetaDot0;
+  let u = thetaDot0; //u is angualar velocity
 
   for (let i = 1; i <= n; i++) {
     k1t = h * f1(t0, theta, u);
@@ -730,7 +771,7 @@ function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
     t0 = t0 + h;
     //incrementing the time by the step length
   }
-  return theta.toFixed(6);
+  return [theta.toFixed(6), u.toFixed(6)]; //returns the angle and angular velocity
 }
 
 //https://www.youtube.com/watch?v=i9-seHaDkrw
