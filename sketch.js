@@ -223,7 +223,7 @@ class System {
             for (let otherObj of currentSquare) {
               //console.log(obj.gridPos, otherObj.gridPos, "positions");
               if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
-                console.log("Collision detected", this.t);
+                //console.log("Collision detected", this.t);
                 //console.log(obj.id, otherObj.id);
               }
             }
@@ -614,6 +614,8 @@ class Point {
         this.endY = particle.y;
         this.particle.setupParticle();
         this.sys.resetSys();
+        this.particle.pos.x = this.particle.lineDist * Math.sin(this.particle.angle) - this.x;
+        this.particle.pos.y = this.particle.lineDist * Math.cos(this.particle.angle) - this.y;
       };
     };
     if (this.lineLocked == false) {
@@ -627,12 +629,15 @@ class Particle {
   constructor(id, sys, x, y, colour) {
     this.id = id;
     this.sys = sys;
+
+    this.radius = 12.5;
+    this.pos = new Vector(x, y); //position vector
     this.x = x;
     this.y = y;
-    this.drag = false;
-    this.radius = 12.5;
-    this.originPoint = null
     this.angle = 0;
+
+    this.drag = false;
+    this.originPoint = null
     this.lineDist = 0; //radius of circle
     this.initialVel = 0;
     this.initialAngle = 0;
@@ -667,15 +672,17 @@ class Particle {
 
   rodMovement(t) {
     let angAndAngVel = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
-    console.log(angAndAngVel, "rungeKutta");
+    //console.log(angAndAngVel, "rungeKutta");
     this.angle = angAndAngVel[0];
     this.angVelocity = angAndAngVel[1];
     this.updatePosition();
   };
 
   updatePosition() {
-    this.x = this.originPoint.x + this.lineDist * Math.sin(this.angle);
-    this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
+    this.pos.x = this.lineDist * Math.sin(this.angle);
+    this.pos.y = this.lineDist * Math.cos(this.angle);
+    this.x = this.originPoint.x + this.pos.x;
+    this.y = this.originPoint.y + this.pos.y;
     this.originPoint.endX = this.x;
     this.originPoint.endY = this.y;
     this.sys.addToGrid(this);
@@ -705,19 +712,12 @@ class Particle {
   };
 
   getAngleFromPos() {
-    // let vec = new Vector(this.x - this.originPoint.x, this.y - this.originPoint.y);
-    // console.log(vec.x, vec.y, "vec");
-    // this.initialAngle = -1 * vec.getAngle() + Math.PI / 2;
-    // console.log(this.initialAngle, "initialAngle");
-    let gradient = (this.y - this.originPoint.y) / (this.x - this.originPoint.x); //gradient = tan of angle from positive x axis
-    if (this.x < this.originPoint.x) {
-      this.initialAngle = 3*Math.PI / 2 - Math.atan(gradient); //particle to left of point
-    } else {
-      this.initialAngle = Math.PI / 2 - Math.atan(gradient); //particle to right of point
-    }
-  }
+    //let posVec = new Vector(this.x - this.originPoint.x, this.y - this.originPoint.y);
+    this.initialAngle = -1 * this.pos.getAngle() + Math.PI / 2;
+    //posVec.destroy();
+  };
 
-}
+};
 
 sys1 = new System(1)
 sysList.push(sys1)
