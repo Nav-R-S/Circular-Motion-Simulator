@@ -667,7 +667,7 @@ class Particle {
     let ang = Math.PI / 2 - vec.getAngle();
     let velocity = -1 * (this.angVelocity * (this.lineDist / this.sys.scale)); //-1 to account for the sign of the velcoity component
 
-    this.velocity.setXAndY(velocity*10, ang);
+    this.velocity.setXAndY(velocity, ang);
     stroke(255,0,0)
     line(this.x, this.y, this.x + this.velocity.x, this.y + this.velocity.y);
   }
