@@ -25,6 +25,11 @@ class Vector {
   getDotProduct(v) {
     return this.x * v.x + this.y * v.y;
   };
+
+  setXAndY(len, angle) {
+    this.x = len * Math.cos(angle);
+    this.y = len * Math.sin(angle);
+  };
 };
 
 class System {
@@ -603,19 +608,28 @@ class Point {
       if ((this.endX - particle.x) ** 2 + (this.endY - particle.y) ** 2 <= particle.radius ** 2) {
         this.lineLocked = true;
         this.particle = particle;
-        if (this.particle.originPoint) { //gets rid of previous connection
+        if (this.particle.originPoint) {
+          //gets rid of previous connection
           this.particle.originPoint.particle = null;
           this.particle.originPoint.lineLocked = false;
           this.particle.originPoint.endX = this.particle.originPoint.x;
           this.particle.originPoint.endY = this.particle.originPoint.y;
-        };
+        }
         this.particle.originPoint = this;
         this.endX = particle.x;
         this.endY = particle.y;
+
+        //setting up particle position
+        this.particle.lineDist = dist(this.x, this.y, this.particle.x, this.particle.y);
+        this.particle.pos.x = this.particle.x - this.x;
+        this.particle.pos.y = this.particle.y - this.y;
+
         this.particle.setupParticle();
         this.sys.resetSys();
-        this.particle.pos.x = this.particle.lineDist * Math.sin(this.particle.angle) - this.x;
-        this.particle.pos.y = this.particle.lineDist * Math.cos(this.particle.angle) - this.y;
+
+        //setting up particle position
+        // this.particle.pos.x = this.particle.lineDist * Math.sin(this.particle.angle) - this.x;
+        // this.particle.pos.y = this.particle.lineDist * Math.cos(this.particle.angle) - this.y;
       };
     };
     if (this.lineLocked == false) {
@@ -631,10 +645,11 @@ class Particle {
     this.sys = sys;
 
     this.radius = 12.5;
-    this.pos = new Vector(x, y); //position vector
+    this.pos = new Vector(x, y); //position vector from origin
     this.x = x;
     this.y = y;
     this.angle = 0;
+    this.velocity = new Vector(0, 0);
 
     this.drag = false;
     this.originPoint = null
@@ -662,12 +677,11 @@ class Particle {
   };
 
   updateVelocity() { //not quite check resolvings
+    let ang = Math.PI / 2 - this.pos.getAngle();
     let velocity = this.angVelocity * (this.lineDist / this.sys.scale);
-    if (this.x < this.originPoint.x) {
-      this.velocity.angle = this.angle - (3 * Math.PI) / 2; //particle to left of point
-    } else {
-      this.velocity.angle = this.angle; //particle to right of point
-    }
+
+    this.velocity.setXAndY(velocity, ang);
+    line(this.x, this.y, this.x + this.velocity.x, this.y + this.velocity.y);
   }
 
   rodMovement(t) {
@@ -683,6 +697,9 @@ class Particle {
     this.pos.y = this.lineDist * Math.cos(this.angle);
     this.x = this.originPoint.x + this.pos.x;
     this.y = this.originPoint.y + this.pos.y;
+
+    // this.x = this.originPoint.x + this.lineDist * Math.sin(this.angle);
+    // this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
     this.originPoint.endX = this.x;
     this.originPoint.endY = this.y;
     this.sys.addToGrid(this);
@@ -708,12 +725,14 @@ class Particle {
     let row = floor(this.x / this.sys.gridSize);
     let col = floor(this.y / this.sys.gridSize);
     this.gridPos = [row, col];
-    //console.log(this.gridPos, "gridPos");
   };
 
   getAngleFromPos() {
     //let posVec = new Vector(this.x - this.originPoint.x, this.y - this.originPoint.y);
     this.initialAngle = -1 * this.pos.getAngle() + Math.PI / 2;
+    console.log(this.initialAngle, "initialAngle");
+    console.log(this.pos.getAngle(), "posAngle");
+    console.log(this.pos.x, this.pos.y, "pos");
     //posVec.destroy();
   };
 
