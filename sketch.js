@@ -223,13 +223,10 @@ class System {
       for (let j = -1; j <= 1; j++) {
         if ((objX + i) > 0 && (objY + j) > 0) {
           let currentSquare = this.grid[objX + i][objY + j];
-          //console.log(currentSquare, this.t, "currentSquare", i, j);
           if (currentSquare.length > 0) {
             for (let otherObj of currentSquare) {
-              //console.log(obj.gridPos, otherObj.gridPos, "positions");
               if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
                 //console.log("Collision detected", this.t);
-                //console.log(obj.id, otherObj.id);
               }
             }
           }
@@ -619,17 +616,8 @@ class Point {
         this.endX = particle.x;
         this.endY = particle.y;
 
-        //setting up particle position
-        this.particle.lineDist = dist(this.x, this.y, this.particle.x, this.particle.y);
-        this.particle.pos.x = this.particle.x - this.x;
-        this.particle.pos.y = this.particle.y - this.y;
-
         this.particle.setupParticle();
         this.sys.resetSys();
-
-        //setting up particle position
-        // this.particle.pos.x = this.particle.lineDist * Math.sin(this.particle.angle) - this.x;
-        // this.particle.pos.y = this.particle.lineDist * Math.cos(this.particle.angle) - this.y;
       };
     };
     if (this.lineLocked == false) {
@@ -663,30 +651,29 @@ class Particle {
 
   draw() {
     strokeWeight(2);
+    stroke(0, 0, 0);
     fill(this.colour[0], this.colour[1], this.colour[2]);
     circle(this.x, this.y, 2 * this.radius);
   };
 
   update(t) {
-    //this.rodMovement(t);
     this.updateRod(t);
-    //this.sys.checkCollisions(this);
-    //console.log(this.gridPos, "update");
-    this.sys.checkCollisions(this);
-    //this.updateVelocity();
+    this.updateVelocity();
+    this.sys.checkCollisions(this);  
   };
 
-  updateVelocity() { //not quite check resolvings
-    let ang = Math.PI / 2 - this.pos.getAngle();
-    let velocity = this.angVelocity * (this.lineDist / this.sys.scale);
+  updateVelocity() {
+    let vec = new Vector(this.pos.x, -1 * this.pos.y); //because the coordinate system is flipped with positive y axis going down, we multiply by -1 to get the true angle
+    let ang = Math.PI / 2 - vec.getAngle();
+    let velocity = -1 * (this.angVelocity * (this.lineDist / this.sys.scale)); //-1 to account for the sign of the velcoity component
 
-    this.velocity.setXAndY(velocity, ang);
+    this.velocity.setXAndY(velocity*10, ang);
+    stroke(255,0,0)
     line(this.x, this.y, this.x + this.velocity.x, this.y + this.velocity.y);
   }
 
   rodMovement(t) {
     let angAndAngVel = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
-    //console.log(angAndAngVel, "rungeKutta");
     this.angle = angAndAngVel[0];
     this.angVelocity = angAndAngVel[1];
     this.updatePosition();
@@ -698,8 +685,6 @@ class Particle {
     this.x = this.originPoint.x + this.pos.x;
     this.y = this.originPoint.y + this.pos.y;
 
-    // this.x = this.originPoint.x + this.lineDist * Math.sin(this.angle);
-    // this.y = this.originPoint.y + this.lineDist * Math.cos(this.angle);
     this.originPoint.endX = this.x;
     this.originPoint.endY = this.y;
     this.sys.addToGrid(this);
@@ -714,6 +699,7 @@ class Particle {
   };
 
   setupParticle(initialVel = 0, initialAngle = 0, initialLineDist = 0) {
+
     this.initialVel = initialVel;
     if (initialAngle == 0) {
       this.getAngleFromPos();
@@ -728,12 +714,10 @@ class Particle {
   };
 
   getAngleFromPos() {
-    //let posVec = new Vector(this.x - this.originPoint.x, this.y - this.originPoint.y);
+    this.pos.x = this.x - this.originPoint.x;
+    this.pos.y = this.y - this.originPoint.y;
+
     this.initialAngle = -1 * this.pos.getAngle() + Math.PI / 2;
-    console.log(this.initialAngle, "initialAngle");
-    console.log(this.pos.getAngle(), "posAngle");
-    console.log(this.pos.x, this.pos.y, "pos");
-    //posVec.destroy();
   };
 
 };
