@@ -226,8 +226,11 @@ class System {
           if (currentSquare.length > 0) {
             for (let otherObj of currentSquare) {
               if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
-                //console.log("Collision detected", this.t);
+                console.log("Collision detected", this.t);
+                console.log(obj.velocity, "inital vel")
                 this.handleCollision(obj, otherObj);
+                console.log(obj.id);
+                console.log(obj.velocity, "final vel")
               }
             }
           }
@@ -248,7 +251,23 @@ class System {
   };
 
   handleCollision(obj1, obj2) {
-    
+    //let lineofImpact = new Vector(obj2.x-obj1.x, obj2.y-obj1.y)
+    //let normalToImpact = lineofImpact.getUnitVector();
+
+    let vx = obj1.velocity  //new Vector(obj1.x, obj1.y)
+    console.log(vx)
+
+    // let vx = obj1.mass * obj1.velocity.x + obj2.mass * obj2.velocity.x - obj2.mass * this.coeffifientOfRestitution * (obj1.velocity.x - obj2.velocity.x)
+    // vx /= obj1.mass + obj2.mass;
+    // let vy = obj1.mass * obj1.velocity.y + obj2.mass * obj2.velocity.y - obj2.mass * this.coeffifientOfRestitution * (obj1.velocity.y - obj2.velocity.y)
+    // vy /= obj1.mass + obj2.mass;
+
+    // obj1.velocity.x = vx;
+    // obj1.velocity.y = vy;
+
+    obj1.initialAngle = parseFloat(obj1.angle);
+    obj1.initialVel = obj1.velocity.getMagnitude();
+    console.log(obj1.initialVel, "inital velocity fcuk yo bitch")
   }
 
   updateSysDimensions(w, h) {
@@ -691,7 +710,7 @@ class Particle {
 
     this.velocity.setXAndY(velocity, ang);
     stroke(255,0,0)
-    line(this.x, this.y, this.x + this.velocity.x, this.y + this.velocity.y);
+    line(this.x, this.y, this.x + this.velocity.x * 10, this.y + this.velocity.y * 10);
   }
 
   rodMovement(t) {
@@ -771,6 +790,7 @@ function f2(t, theta, u, g, len) {
 
 // thetadot = u
 function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
+  console.log(t0, tf, theta0, thetaDot0, h, g, len)
   let n = parseInt((tf - t0) / h, 10);
   let k1t, k2t, k3t, k4t, k1u, k2u, k3u, k4u;
   let theta = theta0;
