@@ -227,6 +227,7 @@ class System {
             for (let otherObj of currentSquare) {
               if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
                 //console.log("Collision detected", this.t);
+                this.handleCollision(obj, otherObj);
               }
             }
           }
@@ -392,6 +393,19 @@ class System {
       controlsContainer.classList.add("controls");
       particleElement.appendChild(controlsContainer);
 
+      let massSubmit = (e) => {
+        let particle = sys.particles[particleID];
+        let parentContainer = e.target.parentElement;
+        let textBox = parentContainer.children[0]; //text box is the first element under the parent
+        let massValue = textBox.value;
+        if (!isNaN(massValue)) {
+          particle.mass = parseFloat(massValue);
+          sys.resetSys();
+        } else {
+          textBox.value = particle.mass;
+        }
+      };
+
       let initialVelocitySubmit = (e) => {
         let particle = sys.particles[particleID];
         let parentContainer = e.target.parentElement;
@@ -483,6 +497,13 @@ class System {
         sys.particles[particleID].lineDist,
         lineDistSlider,
         lineDistTextbox
+      );
+
+      sys.createControlsTextInput(
+        controlsContainer,
+        "Mass",
+        "Set Mass",
+        massSubmit
       );
 
       sys.createControlsTextInput(
@@ -638,6 +659,7 @@ class Particle {
     this.y = y;
     this.angle = 0;
     this.velocity = new Vector(0, 0);
+    this.mass = 1;
 
     this.drag = false;
     this.originPoint = null
