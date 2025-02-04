@@ -30,6 +30,15 @@ class Vector {
     this.x = len * Math.cos(angle);
     this.y = len * Math.sin(angle);
   };
+
+  scale(scalar) {
+    this.x *= scalar;
+    this.y *= scalar;
+  };
+
+  getCrossProduct(v) {
+    return this.x * v.y - this.y * v.x;
+  };
 };
 
 class System {
@@ -56,7 +65,7 @@ class System {
     this.smallestX = -2000;
     this.smallestY = -2000;
 
-    this.coeffifientOfRestitution = 1;
+    this.coefficientOfRestitution = 1;
   }
 
   setup() {
@@ -226,11 +235,12 @@ class System {
           if (currentSquare.length > 0) {
             for (let otherObj of currentSquare) {
               if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
-                console.log("Collision detected", this.t);
-                console.log(obj.velocity, "inital vel")
+                console.log("Collision detected------------------------------", this.t);
+                console.log(obj.id, "objid");
+                //console.log(obj.velocity, "inital vel")
                 this.handleCollision(obj, otherObj);
-                console.log(obj.id);
-                console.log(obj.velocity, "final vel")
+                //console.log(obj.id);
+                //console.log(obj.velocity, "final vel")
               }
             }
           }
@@ -251,23 +261,52 @@ class System {
   };
 
   handleCollision(obj1, obj2) {
-    //let lineofImpact = new Vector(obj2.x-obj1.x, obj2.y-obj1.y)
-    //let normalToImpact = lineofImpact.getUnitVector();
+    let lineofImpact = new Vector(obj2.x-obj1.x, obj2.y-obj1.y)
+    let normalisedLineOfImpact = lineofImpact.getUnitVector(); //gets the unit vector of the line of impact
 
-    let vx = obj1.velocity  //new Vector(obj1.x, obj1.y)
-    console.log(vx)
+    let vObj1 = new Vector(obj1.velocity.x, obj1.velocity.y);
+    let vObj2 = new Vector(obj2.velocity.x, obj2.velocity.y);
+    //console.log(vObj1, "vObj1", vObj2, "vObj2")
 
-    // let vx = obj1.mass * obj1.velocity.x + obj2.mass * obj2.velocity.x - obj2.mass * this.coeffifientOfRestitution * (obj1.velocity.x - obj2.velocity.x)
-    // vx /= obj1.mass + obj2.mass;
-    // let vy = obj1.mass * obj1.velocity.y + obj2.mass * obj2.velocity.y - obj2.mass * this.coeffifientOfRestitution * (obj1.velocity.y - obj2.velocity.y)
-    // vy /= obj1.mass + obj2.mass;
+    let vObj1LineOfImpact = vObj1.getDotProduct(normalisedLineOfImpact);
+    let vObj2LineOfImpact = vObj2.getDotProduct(normalisedLineOfImpact);
+    //console.log(vObj1LineOfImpact, "vObj1 LineOfImpact", vObj2LineOfImpact, "vObj2 LineOfImpact")
 
-    // obj1.velocity.x = vx;
-    // obj1.velocity.y = vy;
+    let obj1n = obj1.mass * vObj1LineOfImpact + obj2.mass * vObj2LineOfImpact - obj2.mass * this.coefficientOfRestitution * (vObj1LineOfImpact - vObj2LineOfImpact)
+    obj1n /= obj1.mass + obj2.mass;
+
+    //let obj2n = obj2.mass * vObj2LineOfImpact + obj1.mass * vObj1LineOfImpact - obj2.mass * this.coefficientOfRestitution * (vObj1LineOfImpact - vObj2LineOfImpact)
+    //obj1n /= obj1.mass + obj2.mass;
+
+    //console.log(obj1n, "obj1 normal to line velcoity -- big e calc")
+    
+    let fvObj1LOI = new Vector(normalisedLineOfImpact.x, normalisedLineOfImpact.y); //final velocity of obj1 in the line of impact direction
+    fvObj1LOI.scale(obj1n);
+
+    //let fvObj2LOI = new Vector(normalisedLineOfImpact.x, normalisedLineOfImpact.y); //final velocity of obj2 in the line of impact direction
+    //fvObj2LOI.scale(obj2n);
+
+    let fvObj1Perp = new Vector(vObj1.x - fvObj1LOI.x, vObj1.y - fvObj1LOI.y); //final velocity of obj1 perpendicular to the line of impact
+    //let fvObj2Perp = new Vector(vObj2.x - fvObj2LOI.x, vObj2.y - fvObj2LOI.y); //final velocity of obj2 perpendicular to the line of impact
+
+    obj1.velocity.x = fvObj1Perp.x + fvObj1LOI.x;
+    obj1.velocity.y = fvObj1Perp.y + fvObj1LOI.y;
+
+    // obj2.velocity.x = fvObj2Perp.x + fvObj2LOI.x;
+    // obj2.velocity.y = fvObj2Perp.y + fvObj2LOI.y;
+    //console.log(obj1.velocity, "final velocity VECTOR")
 
     obj1.initialAngle = parseFloat(obj1.angle);
-    obj1.initialVel = obj1.velocity.getMagnitude();
-    console.log(obj1.initialVel, "inital velocity fcuk yo bitch")
+    if (obj1.velocity.getCrossProduct(obj1.pos) < 0) { //if the cross product is negative then rotation is clockwise
+      obj1.initialVel = -1 * obj1.velocity.getMagnitude();
+    } else {
+      obj1.initialVel = obj1.velocity.getMagnitude();
+    }
+
+    // obj2.initialAngle = parseFloat(obj2.angle);
+    // obj2.initialVel = obj2.velocity.getMagnitude();
+    //console.log(obj1.initialVel, "inital velocity SET AGAIN")
+
   }
 
   updateSysDimensions(w, h) {
@@ -711,9 +750,11 @@ class Particle {
     this.velocity.setXAndY(velocity, ang);
     stroke(255,0,0)
     line(this.x, this.y, this.x + this.velocity.x * 10, this.y + this.velocity.y * 10);
+    console.log(this.velocity.getCrossProduct(this.pos), "CROSSSSSSSSSSSSSSSSSSSSSSSSS")
   }
 
   rodMovement(t) {
+    //console.log(this.initialVel, "row MOVEMENT IUNITAL VELOCITY")
     let angAndAngVel = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
     this.angle = angAndAngVel[0];
     this.angVelocity = angAndAngVel[1];
@@ -740,7 +781,7 @@ class Particle {
   };
 
   setupParticle(initialVel = 0, initialAngle = 0, initialLineDist = 0) {
-
+    console.log(initialVel, "initial velocity SETTTTTTT BY SETUP")
     this.initialVel = initialVel;
     if (initialAngle == 0) {
       this.getAngleFromPos();
