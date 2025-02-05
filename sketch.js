@@ -235,8 +235,9 @@ class System {
           if (currentSquare.length > 0) {
             for (let otherObj of currentSquare) {
               if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
-                console.log("Collision detected------------------------------", this.t);
+                console.log("Collision detected-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
                 console.log(obj.id, "objid");
+                console.log(obj);
                 //console.log(obj.velocity, "inital vel")
                 this.handleCollision(obj, otherObj);
                 //console.log(obj.id);
@@ -748,9 +749,8 @@ class Particle {
     let velocity = -1 * (this.angVelocity * (this.lineDist / this.sys.scale)); //-1 to account for the sign of the velcoity component
 
     this.velocity.setXAndY(velocity, ang);
-    stroke(255,0,0)
+    stroke(255,0,0);
     line(this.x, this.y, this.x + this.velocity.x * 10, this.y + this.velocity.y * 10);
-    console.log(this.velocity.getCrossProduct(this.pos), "CROSSSSSSSSSSSSSSSSSSSSSSSSS")
   }
 
   rodMovement(t) {
@@ -758,6 +758,9 @@ class Particle {
     let angAndAngVel = rungeKutta(0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
     this.angle = angAndAngVel[0];
     this.angVelocity = angAndAngVel[1];
+    console.log(this.id, "obj id")
+    console.log(this.angle, "new angle")
+    console.log(this);
     this.updatePosition();
   };
 
