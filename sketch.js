@@ -262,43 +262,56 @@ class System {
     let vObj1 = new Vector(obj1.velocity.x, obj1.velocity.y);
     let vObj2 = new Vector(obj2.velocity.x, obj2.velocity.y);
 
-    let vObj1LineOfImpact = vObj1.getDotProduct(normalisedLineOfImpact);
+    //gets component of velocity in the direction of the line of impact
+    let vObj1LineOfImpact = vObj1.getDotProduct(normalisedLineOfImpact); 
     let vObj2LineOfImpact = vObj2.getDotProduct(normalisedLineOfImpact);
 
+    //calculates the final velocities of the objects in the line of impact direction
     let obj1n = obj1.mass * vObj1LineOfImpact + obj2.mass * vObj2LineOfImpact - obj2.mass * this.coefficientOfRestitution * (vObj1LineOfImpact - vObj2LineOfImpact);
     obj1n /= obj1.mass + obj2.mass;
 
-    //let obj2n = obj2.mass * vObj2LineOfImpact + obj1.mass * vObj1LineOfImpact - obj2.mass * this.coefficientOfRestitution * (vObj1LineOfImpact - vObj2LineOfImpact)
-    //obj1n /= obj1.mass + obj2.mass;
+    let obj2n = obj2.mass * vObj2LineOfImpact + obj1.mass * vObj1LineOfImpact - obj2.mass * this.coefficientOfRestitution * (vObj1LineOfImpact - vObj2LineOfImpact)
+    obj2n /= obj1.mass + obj2.mass;
 
-    let fvObj1LOI = new Vector(
-      normalisedLineOfImpact.x,
-      normalisedLineOfImpact.y
-    ); //final velocity of obj1 in the line of impact direction
+    let fvObj1LOI = new Vector(normalisedLineOfImpact.x, normalisedLineOfImpact.y); //final velocity of obj1 in the line of impact direction
     fvObj1LOI.scale(obj1n);
 
-    //let fvObj2LOI = new Vector(normalisedLineOfImpact.x, normalisedLineOfImpact.y); //final velocity of obj2 in the line of impact direction
-    //fvObj2LOI.scale(obj2n);
+    let fvObj2LOI = new Vector(normalisedLineOfImpact.x, normalisedLineOfImpact.y); //final velocity of obj2 in the line of impact direction
+    fvObj2LOI.scale(obj2n);
 
     let fvObj1Perp = new Vector(vObj1.x - fvObj1LOI.x, vObj1.y - fvObj1LOI.y); //final velocity of obj1 perpendicular to the line of impact
-    //let fvObj2Perp = new Vector(vObj2.x - fvObj2LOI.x, vObj2.y - fvObj2LOI.y); //final velocity of obj2 perpendicular to the line of impact
+    let fvObj2Perp = new Vector(vObj2.x - fvObj2LOI.x, vObj2.y - fvObj2LOI.y); //final velocity of obj2 perpendicular to the line of impact
 
     obj1.velocity.x = fvObj1Perp.x + fvObj1LOI.x;
     obj1.velocity.y = fvObj1Perp.y + fvObj1LOI.y;
 
-    // obj2.velocity.x = fvObj2Perp.x + fvObj2LOI.x;
-    // obj2.velocity.y = fvObj2Perp.y + fvObj2LOI.y;
+    obj2.velocity.x = fvObj2Perp.x + fvObj2LOI.x;
+    obj2.velocity.y = fvObj2Perp.y + fvObj2LOI.y;
+
     console.log(obj1.initialAngle, "obj1 initial angle before collision");
     obj1.initialAngle = parseFloat(obj1.angle);
     console.log(obj1.initialAngle, "obj1 initial angle after collision");
 
+    obj2.initialAngle = parseFloat(obj2.angle);
+
     this.t0 = this.t;
 
     if (obj1.velocity.getCrossProduct(obj1.pos) < 0) { //if the cross product is negative then rotation is clockwise
-      obj1.initialVel = -1 * fvObj1LOI.getMagnitude();
-    } else {
       obj1.initialVel = fvObj1LOI.getMagnitude();
+    } else {
+      obj1.initialVel = -1 * fvObj1LOI.getMagnitude();
     }
+
+    console.log(obj1.initialVel, "obj", obj1.id, "initial vel after collision");
+
+    if (obj2.velocity.getCrossProduct(obj2.pos) < 0) {
+      //if the cross product is negative then rotation is clockwise
+      obj2.initialVel = fvObj2LOI.getMagnitude();
+    } else {
+      obj2.initialVel = -1 * fvObj2LOI.getMagnitude();
+    }
+
+    console.log(obj2.initialVel, "obj", obj2.id, "initial vel after collision");
 
     // if (obj1.velocity.getCrossProduct(obj1.pos) < 0) { //if the cross product is negative then rotation is clockwise
     //   obj1.initialVel = -1 * obj1.velocity.getMagnitude();
