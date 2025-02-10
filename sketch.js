@@ -232,10 +232,8 @@ class System {
             for (let otherObj of currentSquare) {
               if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
                 console.log("Collision detected-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
-                console.log(obj.x, obj.y, "obj before collision");
                 this.handleCollision(obj, otherObj);
-                console.log(obj.x, obj.y, "obj after collision");
-                console.log(obj)
+                console.log("Collision handled-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
               }
             }
           }
@@ -256,71 +254,151 @@ class System {
   };
 
   handleCollision(obj1, obj2) {
+    if (!obj1.updated || !obj2.updated) {
+      return;
+    }
+
     let lineofImpact = new Vector(obj2.x - obj1.x, obj2.y - obj1.y);
     let normalisedLineOfImpact = lineofImpact.getUnitVector(); //gets the unit vector of the line of impact
 
     let vObj1 = new Vector(obj1.velocity.x, obj1.velocity.y);
     let vObj2 = new Vector(obj2.velocity.x, obj2.velocity.y);
 
-    //gets component of velocity in the direction of the line of impact
-    let vObj1LineOfImpact = vObj1.getDotProduct(normalisedLineOfImpact); 
+    let vnObj1 = vObj1.getUnitVector(); //gets unit vector of velocity of obj1
+    let vnObj2 = vObj2.getUnitVector(); //gets unit vector of velocity of obj2
+
+    //gets component of velocity in the direction of the line of impact (as a scalar)
+    let vObj1LineOfImpact = vObj1.getDotProduct(normalisedLineOfImpact);
     let vObj2LineOfImpact = vObj2.getDotProduct(normalisedLineOfImpact);
 
-    //calculates the final velocities of the objects in the line of impact direction
-    let obj1n = obj1.mass * vObj1LineOfImpact + obj2.mass * vObj2LineOfImpact - obj2.mass * this.coefficientOfRestitution * (vObj1LineOfImpact - vObj2LineOfImpact);
+    //get inital velocity in vector form
+    let ivObj1LOI = new Vector(
+      normalisedLineOfImpact.x,
+      normalisedLineOfImpact.y
+    ); //inital velocity of obj1 in the line of impact direction
+    ivObj1LOI.scale(vObj1LineOfImpact);
+
+    let ivObj2LOI = new Vector(
+      normalisedLineOfImpact.x,
+      normalisedLineOfImpact.y
+    ); //initial velocity of obj2 in the line of impact direction
+    ivObj2LOI.scale(vObj2LineOfImpact);
+
+    //calculates the final velocities of the objects in the line of impact direction in scalar form using coefficient of restitution formula
+    let obj1n =
+      obj1.mass * vObj1LineOfImpact +
+      obj2.mass * vObj2LineOfImpact +
+      obj2.mass *
+        this.coefficientOfRestitution *
+        (vObj2LineOfImpact - vObj1LineOfImpact);
     obj1n /= obj1.mass + obj2.mass;
 
-    let obj2n = obj2.mass * vObj2LineOfImpact + obj1.mass * vObj1LineOfImpact - obj2.mass * this.coefficientOfRestitution * (vObj1LineOfImpact - vObj2LineOfImpact)
+    let obj2n =
+      obj2.mass * vObj2LineOfImpact +
+      obj1.mass * vObj1LineOfImpact +
+      obj1.mass *
+        this.coefficientOfRestitution *
+        (vObj1LineOfImpact - vObj2LineOfImpact);
     obj2n /= obj1.mass + obj2.mass;
 
-    let fvObj1LOI = new Vector(normalisedLineOfImpact.x, normalisedLineOfImpact.y); //final velocity of obj1 in the line of impact direction
+    //get final velocity in vector form
+    let fvObj1LOI = new Vector(
+      normalisedLineOfImpact.x,
+      normalisedLineOfImpact.y
+    ); //final velocity of obj1 in the line of impact direction
     fvObj1LOI.scale(obj1n);
 
-    let fvObj2LOI = new Vector(normalisedLineOfImpact.x, normalisedLineOfImpact.y); //final velocity of obj2 in the line of impact direction
+    let fvObj2LOI = new Vector(
+      normalisedLineOfImpact.x,
+      normalisedLineOfImpact.y
+    ); //final velocity of obj2 in the line of impact direction
     fvObj2LOI.scale(obj2n);
 
-    let fvObj1Perp = new Vector(vObj1.x - fvObj1LOI.x, vObj1.y - fvObj1LOI.y); //final velocity of obj1 perpendicular to the line of impact
-    let fvObj2Perp = new Vector(vObj2.x - fvObj2LOI.x, vObj2.y - fvObj2LOI.y); //final velocity of obj2 perpendicular to the line of impact
+    let fvObj1Perp = new Vector(vObj1.x - ivObj1LOI.x, vObj1.y - ivObj1LOI.y); //final velocity of obj1 perpendicular to the line of impact
+    let fvObj2Perp = new Vector(vObj2.x - ivObj2LOI.x, vObj2.y - ivObj2LOI.y); //final velocity of obj2 perpendicular to the line of impact
+
+    console.log(
+      "[" + obj1.velocity.x,
+      ",",
+      obj1.velocity.y + "]",
+      "obj",
+      obj1.id,
+      "velocity before collision"
+    );
 
     obj1.velocity.x = fvObj1Perp.x + fvObj1LOI.x;
     obj1.velocity.y = fvObj1Perp.y + fvObj1LOI.y;
 
+    console.log(
+      "[" + obj1.velocity.x,
+      ",",
+      obj1.velocity.y + "]",
+      "obj",
+      obj1.id,
+      "velocity after collision"
+    );
+
+    console.log(
+      "[" + obj2.velocity.x,
+      ",",
+      obj2.velocity.y + "]",
+      "obj",
+      obj2.id,
+      "velocity before collision"
+    );
+
     obj2.velocity.x = fvObj2Perp.x + fvObj2LOI.x;
     obj2.velocity.y = fvObj2Perp.y + fvObj2LOI.y;
 
-    console.log(obj1.initialAngle, "obj1 initial angle before collision");
-    obj1.initialAngle = parseFloat(obj1.angle);
-    console.log(obj1.initialAngle, "obj1 initial angle after collision");
+    console.log(
+      "[" + obj2.velocity.x,
+      ",",
+      obj2.velocity.y + "]",
+      "obj",
+      obj2.id,
+      "velocity after collision"
+    );
 
+    // sets up the initial angle for solving the differential equation (using runge kutta)
+    obj1.initialAngle = parseFloat(obj1.angle);
     obj2.initialAngle = parseFloat(obj2.angle);
 
     this.t0 = this.t;
 
-    if (obj1.velocity.getCrossProduct(obj1.pos) < 0) { //if the cross product is negative then rotation is clockwise
-      obj1.initialVel = fvObj1LOI.getMagnitude();
+    // to get component of velocity perpendicular to the line connecting particle and point
+    // need to dot product the new velocity vector with the unit vector of the previous velocity vector
+
+    // obj1.initialVel = obj1.velocity.getDotProduct(vnObj1);
+
+    // console.log(obj1.initialVel, "obj", obj1.id, "initial vel after collision");
+
+    // obj2.initialVel = obj2.velocity.getDotProduct(vnObj2);
+
+    // console.log(obj2.initialVel, "obj", obj2.id, "initial vel after collision");
+
+    
+    if (obj1.velocity.getCrossProduct(obj1.pos) < 0) {
+      //if the cross product is negative then rotation is clockwise
+      obj1.initialVel = -1 * Math.abs(obj1.velocity.getDotProduct(vnObj1));
     } else {
-      obj1.initialVel = -1 * fvObj1LOI.getMagnitude();
+      obj1.initialVel = Math.abs(obj1.velocity.getDotProduct(vnObj1));
     }
+
+    // console.log(obj1.initialVel, "obj", obj1.id, "initial vel after collision");
 
     console.log(obj1.initialVel, "obj", obj1.id, "initial vel after collision");
 
     if (obj2.velocity.getCrossProduct(obj2.pos) < 0) {
       //if the cross product is negative then rotation is clockwise
-      obj2.initialVel = fvObj2LOI.getMagnitude();
+      obj2.initialVel = -1 * Math.abs(obj2.velocity.getDotProduct(vnObj2));
     } else {
-      obj2.initialVel = -1 * fvObj2LOI.getMagnitude();
+      obj2.initialVel = Math.abs(obj2.velocity.getDotProduct(vnObj2));
     }
 
+    obj1.updated = false;
+    obj2.updated = false;
+
     console.log(obj2.initialVel, "obj", obj2.id, "initial vel after collision");
-
-    // if (obj1.velocity.getCrossProduct(obj1.pos) < 0) { //if the cross product is negative then rotation is clockwise
-    //   obj1.initialVel = -1 * obj1.velocity.getMagnitude();
-    // } else {
-    //   obj1.initialVel = obj1.velocity.getMagnitude();
-    // }
-
-    // obj2.initialAngle = parseFloat(obj2.angle);
-    // obj2.initialVel = obj2.velocity.getMagnitude();
   }
 
   updateSysDimensions(w, h) {
@@ -741,6 +819,8 @@ class Particle {
     this.colour = colour;
 
     this.gridPos = [];
+    this.lastColl = null;
+    this.updated = false;
   };
 
   draw() {
@@ -753,7 +833,7 @@ class Particle {
   update(t) {
     this.updateRod(t);
     this.updateVelocity();
-    this.sys.checkCollisions(this);  
+    this.sys.checkCollisions(this); 
   };
 
   updateVelocity() {
@@ -762,8 +842,12 @@ class Particle {
     let velocity = -1 * (this.angVelocity * (this.lineDist / this.sys.scale)); //-1 to account for the sign of the velcoity component
 
     this.velocity.setXAndY(velocity, ang);
+
+    console.log("[" + this.velocity.x, this.velocity.y + "]", "velocity UPDATED", this.id, "id");
+
     stroke(255,0,0);
     line(this.x, this.y, this.x + this.velocity.x * 10, this.y + this.velocity.y * 10);
+    this.updated = true;
   }
 
   rodMovement(t) {
