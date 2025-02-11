@@ -77,9 +77,14 @@ class System {
     let objectsMenuButton = document.getElementById("objectsMenuButton");
     let createParticleButton = document.getElementById("createParticleButton");
     let createPointButton = document.getElementById("createPointButton");
+    let homeButton = document.getElementById("homeButton");
 
     timeBar.max = 0;
     timeBar.min = 0;
+
+    homeButton.onclick = () => {
+      window.location.href = "home.html";
+    };
 
     createParticleButton.onclick = function () {
       createNewParticle();
