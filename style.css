@@ -220,11 +220,48 @@ canvas {
   margin: 17.5px;
 }
 
+/* homepage styles */
+
+#homeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  background-color: rgb(242, 233, 228);
+}
+
+#systemsContainer {
+  margin-top: 30vh;
+  /* border: 3px solid black; */
+  width: 50%;
+  max-height: 50%;
+  overflow-y: scroll;
+}
+
 .systemName {
   background-color: rgb(74, 78, 105);
   font: 20px white;
+  height: 70px;
+  border-radius: 10px;
 }
 
-#addSystem {
+#systemCreateButton {
+  margin: 20px;
   width: 80px;
+}
+
+.systemFeatures {
+  display: none;
+}
+
+.systemFeatures.systemFeaturesShow {
+  display: block;
+}
+
+.valuesContainer {
+  display: none;
+}
+
+.valuesContainer.valuesContainerShow {
+  display: block;
 }
