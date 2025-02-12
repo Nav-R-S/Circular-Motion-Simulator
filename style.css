@@ -219,3 +219,12 @@ canvas {
   height: 65px;
   margin: 17.5px;
 }
+
+.systemName {
+  background-color: rgb(74, 78, 105);
+  font: 20px white;
+}
+
+#addSystem {
+  width: 80px;
+}
