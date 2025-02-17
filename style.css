@@ -236,6 +236,7 @@ canvas {
   width: 50%;
   max-height: 50%;
   overflow-y: scroll;
+  border-radius: 10px;
 }
 
 .systemName {
@@ -264,4 +265,8 @@ canvas {
 
 .valuesContainer.valuesContainerShow {
   display: block;
+}
+
+.top-gradient {
+  background: linear-gradient(to bottom, rgba(74, 78, 105, 0), rgba(74, 78, 105, 1));
 }

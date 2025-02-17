@@ -56,31 +56,85 @@ class SystemElement {
         //     scrollFade(systemsContainer);
         // };
 
-        // function scrollFade(element) {
-        //     let rect = element.getBoundingClientRect();
-        //     let topElement = document.elementFromPoint(
-        //       rect.left + parent.clientLeft,
-        //       rect.top + parent.clientTop
-        //     );
+        
 
-        //     let parent = element.parentElement;
-        //     let distanceToTop = systemElement.pageYOffset + element.getBoundingClientRect().top;
-        //     let elementHeight = element.offsetHeight;
-        //     let scrollTop = element.offsetTop - parent.scrollTop;
+        // Usage example
+        //const container = document.getElementById("scrollable-div");
+        systemsContainer.addEventListener("scroll", () => {
+            scrollFade(systemsContainer);
+        });
 
-        //     console.log(distanceToTop, elementHeight, scrollTop);
+        function scrollFade(container) {
 
-        //     let opacity = 1
+            function getEdgeElements(container) {
+                const children = Array.from(container.children);
+                let top = null;
+                let minDistanceFromTop = Infinity;
 
-        //     if (scrollTop > distanceToTop) {
-        //       opacity = 1 - (scrollTop - distanceToTop) / elementHeight;
-        //     }
+                let bottom = null;
+                let minDistanceFromBottom = Infinity;
 
-        //     if (opacity >= 0) {
-        //       element.style.opacity = opacity;
-        //     } 
+                children.forEach((child) => {
+                    const rect = child.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
 
-        // }
+                    let containerRectTop = containerRect.top;
+                    let topDist = Math.abs((rect.top + rect.height / 2) - (containerRectTop));
+
+                    let containerRectBottom = containerRect.bottom;
+                    let bottomDist = Math.abs((rect.top + rect.height / 2) - (containerRectBottom));
+
+                    if (topDist < minDistanceFromTop) {
+                        minDistanceFromTop = topDist;
+                        top = child;
+                    };
+
+                    if (bottomDist < minDistanceFromBottom) {
+                        minDistanceFromBottom = bottomDist;
+                        bottom = child;
+                    };
+                });
+                return [top, bottom];
+            };
+
+            // redo function dec
+            let containerRect = container.getBoundingClientRect();
+            let edgeElements = getEdgeElements(container);
+            
+            let topElement = edgeElements[0];
+            let bottomElement = edgeElements[1];
+            
+            let topElementRect = topElement.getBoundingClientRect();
+            let bottomElementRect = bottomElement.getBoundingClientRect();
+
+            Array.from(container.children).forEach(child => {
+                child.children[0].style.background = "rgb(74, 78, 105)";
+                child.style.opacity = 1;
+            });//resets opacity of all elements
+
+            // let topOpacity = 1 - (containerRect.top - topElementRect.top) / topElementRect.height;
+
+            // let topOpacity = 1 - Math.pow(Math.max(0, Math.min(t, 1)), 2); // Quadratic easing
+
+            // let bottomOpacity = 1 - (bottomElementRect.bottom - containerRect.bottom) / bottomElementRect.height;
+
+            // let bottomOpacity = 1 - Math.pow(Math.max(0, Math.min(b, 1)), 2); // Quadratic easing
+
+            // topElement.style.opacity = topOpacity;
+            // bottomElement.style.opacity = bottomOpacity;
+
+            let topPercent = ((containerRect.top - topElementRect.top) / topElementRect.height) * 100;
+
+            if (topPercent > 0) {
+                topElement.children[0].style.background = `linear-gradient(to bottom, rgba(74, 78, 105, 0) ${topPercent}%, rgba(74, 78, 105, 1))`;
+            };
+
+            let bottomPercent = (1 - (bottomElementRect.bottom - containerRect.bottom) / bottomElementRect.height) * 100;
+            console.log(bottomPercent)
+            if (bottomPercent > 0) {
+                bottomElement.children[0].style.background = `linear-gradient(to bottom, rgba(74, 78, 105, 1) ${(bottomPercent)}%, rgba(74, 78, 105, 0)) `;
+            }
+        }
     };
 
     createControlsTextInput(controlsContainer, buttonText, initalVal, submitButtonFunction) {
