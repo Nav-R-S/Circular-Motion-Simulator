@@ -259,15 +259,44 @@ class System {
   };
 
   handleCollision(obj1, obj2) {
-    if (!obj1.updated || !obj2.updated) {
-      return;
+
+    let vObj1 = new Vector(0, 0);
+    let vObj2 = new Vector(0, 0);
+
+    if (obj1.updated == false) {
+      obj1.prevVelocity.x = obj1.velocity.x;
+      obj1.prevVelocity.y = obj1.velocity.y;
+
+      //variable for velocity of the object
+      vObj1.x = obj1.velocity.x;
+      vObj1.y = obj1.velocity.y;
+
+      obj1.updated = true;
+    } else {
+      //variable for previous velocity of the object
+      vObj1.x = obj1.prevVelocity.x;
+      vObj1.y = obj1.prevVelocity.y;
+    }
+
+    if (obj2.updated == false) {
+      obj2.prevVelocity.x = obj2.velocity.x;
+      obj2.prevVelocity.y = obj2.velocity.y;
+
+      //variable for velocity of the object
+      vObj2.x = obj2.velocity.x;
+      vObj2.y = obj2.velocity.y;
+
+      obj2.updated = true;
+    } else {
+      //variable for previous velocity of the object
+      vObj2.x = obj2.prevVelocity.x;
+      vObj2.y = obj2.prevVelocity.y;
     }
 
     let lineofImpact = new Vector(obj2.x - obj1.x, obj2.y - obj1.y);
     let normalisedLineOfImpact = lineofImpact.getUnitVector(); //gets the unit vector of the line of impact
 
-    let vObj1 = new Vector(obj1.velocity.x, obj1.velocity.y);
-    let vObj2 = new Vector(obj2.velocity.x, obj2.velocity.y);
+    
 
     let vnObj1 = vObj1.getUnitVector(); //gets unit vector of velocity of obj1
     let vnObj2 = vObj2.getUnitVector(); //gets unit vector of velocity of obj2
@@ -322,47 +351,11 @@ class System {
     let fvObj1Perp = new Vector(vObj1.x - ivObj1LOI.x, vObj1.y - ivObj1LOI.y); //final velocity of obj1 perpendicular to the line of impact
     let fvObj2Perp = new Vector(vObj2.x - ivObj2LOI.x, vObj2.y - ivObj2LOI.y); //final velocity of obj2 perpendicular to the line of impact
 
-    console.log(
-      "[" + obj1.velocity.x,
-      ",",
-      obj1.velocity.y + "]",
-      "obj",
-      obj1.id,
-      "velocity before collision"
-    );
-
     obj1.velocity.x = fvObj1Perp.x + fvObj1LOI.x;
     obj1.velocity.y = fvObj1Perp.y + fvObj1LOI.y;
 
-    console.log(
-      "[" + obj1.velocity.x,
-      ",",
-      obj1.velocity.y + "]",
-      "obj",
-      obj1.id,
-      "velocity after collision"
-    );
-
-    console.log(
-      "[" + obj2.velocity.x,
-      ",",
-      obj2.velocity.y + "]",
-      "obj",
-      obj2.id,
-      "velocity before collision"
-    );
-
     obj2.velocity.x = fvObj2Perp.x + fvObj2LOI.x;
     obj2.velocity.y = fvObj2Perp.y + fvObj2LOI.y;
-
-    console.log(
-      "[" + obj2.velocity.x,
-      ",",
-      obj2.velocity.y + "]",
-      "obj",
-      obj2.id,
-      "velocity after collision"
-    );
 
     // sets up the initial angle for solving the differential equation (using runge kutta)
     obj1.initialAngle = parseFloat(obj1.angle);
@@ -373,14 +366,6 @@ class System {
     // to get component of velocity perpendicular to the line connecting particle and point
     // need to dot product the new velocity vector with the unit vector of the previous velocity vector
 
-    // obj1.initialVel = obj1.velocity.getDotProduct(vnObj1);
-
-    // console.log(obj1.initialVel, "obj", obj1.id, "initial vel after collision");
-
-    // obj2.initialVel = obj2.velocity.getDotProduct(vnObj2);
-
-    // console.log(obj2.initialVel, "obj", obj2.id, "initial vel after collision");
-
     
     if (obj1.velocity.getCrossProduct(obj1.pos) < 0) {
       //if the cross product is negative then rotation is clockwise
@@ -389,21 +374,12 @@ class System {
       obj1.initialVel = Math.abs(obj1.velocity.getDotProduct(vnObj1));
     }
 
-    // console.log(obj1.initialVel, "obj", obj1.id, "initial vel after collision");
-
-    console.log(obj1.initialVel, "obj", obj1.id, "initial vel after collision");
-
     if (obj2.velocity.getCrossProduct(obj2.pos) < 0) {
       //if the cross product is negative then rotation is clockwise
       obj2.initialVel = -1 * Math.abs(obj2.velocity.getDotProduct(vnObj2));
     } else {
       obj2.initialVel = Math.abs(obj2.velocity.getDotProduct(vnObj2));
     }
-
-    obj1.updated = false;
-    obj2.updated = false;
-
-    console.log(obj2.initialVel, "obj", obj2.id, "initial vel after collision");
   }
 
   updateSysDimensions(w, h) {
@@ -825,6 +801,8 @@ class Particle {
 
     this.gridPos = [];
     this.lastColl = null;
+
+    this.prevVelocity = new Vector(0, 0);
     this.updated = false;
   };
 
@@ -838,7 +816,7 @@ class Particle {
   update(t) {
     this.updateRod(t);
     this.updateVelocity();
-    this.sys.checkCollisions(this); 
+    //this.sys.checkCollisions(this); 
   };
 
   updateVelocity() {
@@ -848,18 +826,29 @@ class Particle {
 
     this.velocity.setXAndY(velocity, ang);
 
-    console.log("[" + this.velocity.x, this.velocity.y + "]", "velocity UPDATED", this.id, "id");
-
     stroke(255,0,0);
     line(this.x, this.y, this.x + this.velocity.x * 10, this.y + this.velocity.y * 10);
-    this.updated = true;
+    //this.updated = true;
   }
 
   rodMovement(t) {
-    console.log(this.id, "OBJECT ID");
+    
     let angAndAngVel = rungeKutta(this.sys.t0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
+    console.log(
+      "rk-values for obj",
+      this.id,
+      ":",
+      this.sys.t0,
+      t,
+      this.initialAngle,
+      this.initialVel / (this.lineDist / this.sys.scale),
+      0.0025,
+      this.sys.g,
+      this.lineDist / this.sys.scale
+    );
+    console.log("vel for", this.id, ":", this.initialVel);
     this.angle = angAndAngVel[0];
-    //console.log(this.angle, "angle", this.id, "id");
+    
     this.angVelocity = angAndAngVel[1];
     this.updatePosition();
   };
@@ -869,8 +858,6 @@ class Particle {
     this.pos.y = this.lineDist * Math.cos(this.angle);
     this.x = this.originPoint.x + this.pos.x;
     this.y = this.originPoint.y + this.pos.y;
-
-    //console.log("obj ", this.id, this.x, this.y, "x and y");
 
     this.originPoint.endX = this.x;
     this.originPoint.endY = this.y;
@@ -936,7 +923,7 @@ function f2(t, theta, u, g, len) {
 
 // thetadot = u
 function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
-  console.log(t0, tf, theta0, thetaDot0, h, g, len);
+  
   let n = parseInt((tf - t0) / h, 10);
   let k1t, k2t, k3t, k4t, k1u, k2u, k3u, k4u;
   let theta = theta0;
@@ -984,13 +971,25 @@ function draw() {
       particle.update(sys1.t);
     }
   }
+
+  for (let particle of sys1.particles) {
+    if (particle.originPoint && sys1.started) {
+      sys1.checkCollisions(particle); 
+    };
+  }
+
+  for (let particle of sys1.particles) {
+    particle.updated = false;
+  };
   
   stroke(0);
   strokeWeight(2);
 
   fill(232, 180, 35);
   textSize(100);
-  text(sys1.t.toFixed(2), windowWidth-300, 115);
+  text(sys1.t.toFixed(2), windowWidth - 300, 115); //timer
+  
+
   if (sys1.play == true) {
     sys1.t += 1 / 60;
     if (sys1.t > timeBar.max) {
