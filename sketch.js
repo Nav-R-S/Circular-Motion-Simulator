@@ -130,6 +130,7 @@ class System {
           for (let particle of this.particles) {
             if (particle.originPoint) {
               particle.setupParticle(particle.initialVel, particle.initialAngle, particle.lineDist);
+              particle.initialConditions[this.t] = [particle.initialAngle, particle.initialVel, particle.lineDist]
             };
           };
           this.started = true;
@@ -804,6 +805,8 @@ class Particle {
 
     this.prevVelocity = new Vector(0, 0);
     this.updated = false;
+
+    this.initialConditions = {}; //stores times and corresponding inital conditons
   };
 
   draw() {
@@ -831,9 +834,23 @@ class Particle {
     //this.updated = true;
   }
 
+  getIntialConditions(t) {
+    let times = Object.keys(this.initialConditions);
+    let closestTime = 0;
+    for (let time in times) {
+      if (parseFloat(time) <= t && parseFloat(time) > closestTime) {
+        closestTime = time;
+      };
+    };
+    return [this.initialConditions[closestTime], parseFloat(closestTime)];
+  };
+
   rodMovement(t) {
-    
-    let angAndAngVel = rungeKutta(this.sys.t0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
+    let initalConditions = this.getIntialConditions(t);
+    let initalConditionsList = initalConditions[0];
+    let startTime = initalConditions[1];
+    let angAndAngVel = rungeKutta(startTime, t, initalConditionsList[0], initalConditionsList[1] / (initalConditionsList[2] / this.sys.scale), 0.0025, this.sys.g, (initalConditionsList[2] / this.sys.scale));
+    //let angAndAngVel = rungeKutta(this.sys.t0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
     console.log(
       "rk-values for obj",
       this.id,
