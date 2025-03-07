@@ -133,4 +133,22 @@ createButton.onclick = function () {
     sysList.push(sysList.length+1);
 };
 
+let profileButton = document.getElementById("profileButton");
+
+profileButton.onmousedown = function () {
+    profileButton.src = "images/profileColouredPressed.png";
+};
+profileButton.onmouseup = function () {
+    profileButton.src = "images/profileColoured.png";
+};
+profileButton.onmouseleave = function () {
+    profileButton.src = "images/profileColoured.png";
+};
+
+profileButton.onclick = function () {
+    window.location.href = "profile.html";
+};
+
+
+
 
