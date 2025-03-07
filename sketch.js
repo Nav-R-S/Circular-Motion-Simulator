@@ -236,7 +236,7 @@ class System {
           let currentSquare = this.grid[objX + i][objY + j];
           if (currentSquare.length > 0) {
             for (let otherObj of currentSquare) {
-              if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj)) {
+              if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj) && !obj.overlapedObjects.includes(otherObj)) {
                 console.log("Collision detected-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
                 this.handleCollision(obj, otherObj);
                 console.log("Collision handled-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
@@ -260,6 +260,8 @@ class System {
   };
 
   handleCollision(obj1, obj2) {
+    obj1.overlapedObjects.push(obj2);
+    obj2.overlapedObjects.push(obj1);
 
     let vObj1 = new Vector(0, 0);
     let vObj2 = new Vector(0, 0);
@@ -296,8 +298,6 @@ class System {
 
     let lineofImpact = new Vector(obj2.x - obj1.x, obj2.y - obj1.y);
     let normalisedLineOfImpact = lineofImpact.getUnitVector(); //gets the unit vector of the line of impact
-
-    
 
     let vnObj1 = vObj1.getUnitVector(); //gets unit vector of velocity of obj1
     let vnObj2 = vObj2.getUnitVector(); //gets unit vector of velocity of obj2
@@ -362,7 +362,7 @@ class System {
     obj1.initialAngle = parseFloat(obj1.angle);
     obj2.initialAngle = parseFloat(obj2.angle);
 
-    this.t0 = this.t;
+    //this.t0 = this.t;
 
     // to get component of velocity perpendicular to the line connecting particle and point
     // need to dot product the new velocity vector with the unit vector of the previous velocity vector
@@ -374,6 +374,9 @@ class System {
     } else {
       obj1.initialVel = Math.abs(obj1.velocity.getDotProduct(vnObj1));
     }
+    obj1.lineDist = obj1.getLineDist();
+    obj1.initialAngle = obj1.getAngleFromPos();
+    obj1.initialConditions[this.t] = [obj1.initialAngle, obj1.initialVel, obj1.lineDist]
 
     if (obj2.velocity.getCrossProduct(obj2.pos) < 0) {
       //if the cross product is negative then rotation is clockwise
@@ -381,6 +384,9 @@ class System {
     } else {
       obj2.initialVel = Math.abs(obj2.velocity.getDotProduct(vnObj2));
     }
+    obj2.lineDist = obj2.getLineDist();
+    obj2.initialAngle = obj2.getAngleFromPos();
+    obj2.initialConditions[this.t] = [obj2.initialAngle, obj2.initialVel, obj2.lineDist]
   }
 
   updateSysDimensions(w, h) {
@@ -699,7 +705,6 @@ class System {
       controlsContainer.classList.add("controls");
       pointElement.appendChild(controlsContainer);
 
-      //sys.createControlsScrollInput(controlsContainer, "Point Radius", "0", "10");
       sys.createControlsCheckbox(controlsContainer, "Collisions");
     };
 
@@ -736,7 +741,6 @@ class Point {
 
     this.mass;
     this.speed = 0;
-    //this.velocity = new Vector(0, 0);
     this.radius = 5;
 
     this.endX = x;
@@ -807,6 +811,7 @@ class Particle {
     this.updated = false;
 
     this.initialConditions = {}; //stores times and corresponding inital conditons
+    this.overlapedObjects = [];
   };
 
   draw() {
@@ -831,31 +836,41 @@ class Particle {
 
     stroke(255,0,0);
     line(this.x, this.y, this.x + this.velocity.x * 10, this.y + this.velocity.y * 10);
-    //this.updated = true;
   }
 
   getIntialConditions(t) {
-    let times = Object.keys(this.initialConditions);
+    //let times = Object.keys(this.initialConditions);
+    //console.log("timesss", times)
     let closestTime = 0;
-    for (let time in times) {
+    for (let time in this.initialConditions) {
+      //console.log(parseFloat(time), t, (parseFloat(time) <= t && parseFloat(time) > closestTime), "time in list, current time and bool" )
       if (parseFloat(time) <= t && parseFloat(time) > closestTime) {
         closestTime = time;
       };
     };
+    //console.log(closestTime, "closest Time")
     return [this.initialConditions[closestTime], parseFloat(closestTime)];
   };
 
   rodMovement(t) {
+    //getting inital conditions
     let initalConditions = this.getIntialConditions(t);
     let initalConditionsList = initalConditions[0];
     let startTime = initalConditions[1];
-    let angAndAngVel = rungeKutta(startTime, t, initalConditionsList[0], initalConditionsList[1] / (initalConditionsList[2] / this.sys.scale), 0.0025, this.sys.g, (initalConditionsList[2] / this.sys.scale));
+
+    //setting up the initial conditions for the differential equation
+    this.initialAngle = initalConditionsList[0];
+    this.initialVel = initalConditionsList[1];
+    this.lineDist = initalConditionsList[2];
+    
+    let angAndAngVel = rungeKutta(startTime, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
+    //let angAndAngVel = rungeKutta(startTime, t, initalConditionsList[0], initalConditionsList[1] / (initalConditionsList[2] / this.sys.scale), 0.0025, this.sys.g, (initalConditionsList[2] / this.sys.scale));
     //let angAndAngVel = rungeKutta(this.sys.t0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
     console.log(
       "rk-values for obj",
       this.id,
       ":",
-      this.sys.t0,
+      startTime,
       t,
       this.initialAngle,
       this.initialVel / (this.lineDist / this.sys.scale),
@@ -892,10 +907,11 @@ class Particle {
   setupParticle(initialVel = 0, initialAngle = 0, initialLineDist = 0) {
     this.initialVel = initialVel;
     if (initialAngle == 0) {
-      this.getAngleFromPos();
+      this.initialAngle = this.getAngleFromPos();
     }
     if (initialLineDist == 0) {
-      this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y);
+      //this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y);
+      this.lineDist = this.getLineDist();
     }
 
     let row = floor(this.x / this.sys.gridSize);
@@ -903,12 +919,17 @@ class Particle {
     this.gridPos = [row, col];
   };
 
+  getLineDist() {
+    return dist(this.x, this.y, this.originPoint.x, this.originPoint.y);
+  }
+
   getAngleFromPos() {
     this.pos.x = this.x - this.originPoint.x;
     this.pos.y = this.y - this.originPoint.y;
 
-    this.initialAngle = -1 * this.pos.getAngle() + Math.PI / 2;
-    console.log(this.initialAngle, "initial angle SETTTTT");
+    //this.initialAngle = -1 * this.pos.getAngle() + Math.PI / 2;
+    console.log(-1 * this.pos.getAngle() + Math.PI / 2, "initial angle SETTTTT");
+    return -1 * this.pos.getAngle() + Math.PI / 2;
   };
 
 };
@@ -980,20 +1001,30 @@ function draw() {
 
   for (let originPoint of sys1.points) {
     originPoint.draw();
-  }
+  };
 
   for (let particle of sys1.particles) {
     particle.draw();
     if (particle.originPoint && sys1.started) {
       particle.update(sys1.t);
     }
-  }
+  };
 
   for (let particle of sys1.particles) {
     if (particle.originPoint && sys1.started) {
       sys1.checkCollisions(particle); 
     };
-  }
+  };
+  
+  for (let particle of sys1.particles) {
+    if (particle.originPoint && sys1.started) {
+      for (let obj of particle.overlapedObjects) {
+        if (!sys1.checkIfCollisionDetected(particle, obj)) {
+          particle.overlapedObjects = particle.overlapedObjects.filter(element => element !== obj);
+        }
+      };
+    };
+  };
 
   for (let particle of sys1.particles) {
     particle.updated = false;
