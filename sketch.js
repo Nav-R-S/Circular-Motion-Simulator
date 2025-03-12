@@ -1002,6 +1002,7 @@ function draw() {
   for (let originPoint of sys1.points) {
     originPoint.draw();
   };
+  // displays points on the canvas
 
   for (let particle of sys1.particles) {
     particle.draw();
@@ -1009,12 +1010,14 @@ function draw() {
       particle.update(sys1.t);
     }
   };
+  // updates the position of the particles
 
   for (let particle of sys1.particles) {
     if (particle.originPoint && sys1.started) {
       sys1.checkCollisions(particle); 
     };
   };
+  // this runs the collision detection algorithm and the collision handling algorithm
   
   for (let particle of sys1.particles) {
     if (particle.originPoint && sys1.started) {
@@ -1025,10 +1028,12 @@ function draw() {
       };
     };
   };
+  // this updates the overlaped objects array to remove objects that are no longer overlaping
 
   for (let particle of sys1.particles) {
     particle.updated = false;
   };
+  // makes sure all particle collisions are set to not updated for next iteration
   
   stroke(0);
   strokeWeight(2);
