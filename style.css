@@ -296,3 +296,64 @@ canvas {
   justify-content: flex-end; /* Align to the right */
   align-items: center; /* Center vertically */
 }
+
+/* profile stypes */
+
+#profileHeader {
+  display: flex;
+  justify-content: flex-end;
+}
+
+#profileContainer {
+  background-color: rgb(242, 233, 228);
+  height: 100vh;
+}
+
+#loginContent {
+  background-color: rgb(226, 226, 226);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#loginForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loginInput {
+  margin-top: 10px;
+}
+
+#registerLink {
+  margin-top: 20px;
+}
+
+/* register stypes */
+
+#registerHeader {
+  display: flex;
+  justify-content: space-between;
+}
+
+#registerContainer {
+  background-color: rgb(242, 233, 228);
+  height: 100vh;
+}
+
+#registerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#registerForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.registerInput {
+  margin-top: 10px;
+}

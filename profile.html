@@ -4,8 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    
+    <div id="profileContainer">
+        <div id="profileHeader">
+            <input type="image" src="images/homeColouredBlue.png" id="homeButton" class="tool toolImgButton">
+        </div>
+        <div id="loginContainer">
+            <div id="loginContent">
+                <div id="loginHeading">Login</div>
+                <form id="loginForm">
+                    <input type="text" id="registerUsername" placeholder="Username" class="loginInput">
+                    <input type="password" id="registerPassword" placeholder="Password" class="loginInput">
+                    <input type="submit" value="Sign In" id="registerButton" class="loginInput">
+                </form>
+                <a href="register.html" id="registerLink">Don't have an account? Register here</a>
+            </div>
+        </div>
+        
+    </div>
+    <script src="profile.js"></script>
 </body>
 </html>
