@@ -158,5 +158,5 @@ profileButton.onmouseleave = function () {
 };
 
 profileButton.onclick = function () {
-  window.location.href = "profile.html";
+  window.location.href = "login.html";
 };

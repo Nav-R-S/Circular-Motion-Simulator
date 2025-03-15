@@ -293,18 +293,35 @@ canvas {
   width: 100vw;
   margin: 0;
   display: flex;
-  justify-content: flex-end; /* Align to the right */
-  align-items: center; /* Center vertically */
+  justify-content: center;
+  align-items: center; 
+  position: relative;
+  background-color: rgb(74, 78, 105);
+}
+
+#homeHeading {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 70px;
+  white-space: nowrap; /* Prevents text from breaking */
+}
+
+#homeHeaderRight {
+  margin-left: auto; 
 }
 
 /* profile stypes */
 
-#profileHeader {
+#loginHeader {
   display: flex;
   justify-content: flex-end;
+  background-color: rgb(74, 78, 105);
 }
 
-#profileContainer {
+#loginContainer {
   background-color: rgb(242, 233, 228);
   height: 100vh;
 }
@@ -335,6 +352,7 @@ canvas {
 #registerHeader {
   display: flex;
   justify-content: space-between;
+  background-color: rgb(74, 78, 105);
 }
 
 #registerContainer {
