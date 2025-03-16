@@ -157,6 +157,6 @@ profileButton.onmouseleave = function () {
   profileButton.src = "images/profileColoured.png";
 };
 
-profileButton.onclick = function () {
+profileButton.onclick = function () { //checks if logged in
   window.location.href = "login.html";
 };

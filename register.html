@@ -9,19 +9,23 @@
 <body>
     <div id="registerContainer">
         <div id="registerHeader">
-            <input type="image" src="images/turn-back.png" id="backButton" class="tool toolImgButton">
-            <input type="image" src="images/homeColoured.png" id="homeButton" class="tool toolImgButton">
+            <div id="registerTitle">Sign Up</div>
+            <div id="registerHeaderLeft">
+                <input type="image" src="images/turn-back.png" id="backButton" class="tool toolImgButton">
+            </div>
+            <div id="registerHeaderRight">
+                <input type="image" src="images/homeColoured.png" id="homeButton" class="tool toolImgButton">
+            </div>
         </div>
-        <div id="registerContainer">
+        <div id="registerContentContainer">
             <div id="registerContent">
-                <div id="registerHeading">Register</div>
                 <form id="registerForm">
                     <input type="text" id="registerUsername" placeholder="Username" class="registerInput">
                     <input type="password" id="registerPassword" placeholder="Password" class="registerInput">
                     <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" class="registerInput"> 
-                    <input type="submit" value="Register" id="registerButton" class="registerInput">
+                    <input type="submit" value="Sign Up" id="registerButton" class="registerInput registerSubmitButton">
                 </form>
-                
+                <a href="login.html" id="loginLink">Already have an account? Sign in here</a>
             </div>
         </div>
         

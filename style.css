@@ -317,8 +317,23 @@ canvas {
 
 #loginHeader {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
   background-color: rgb(74, 78, 105);
+}
+
+#loginHeaderRight {
+  margin-left: auto; 
+}
+
+#loginTitle {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 70px;
+  white-space: nowrap; /* Prevents text from breaking */
 }
 
 #loginContainer {
@@ -326,11 +341,21 @@ canvas {
   height: 100vh;
 }
 
+#loginContentContainer {
+  display: flex;
+  justify-content: center;
+}
+
 #loginContent {
-  background-color: rgb(226, 226, 226);
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 10%;
+  border: 2px solid rgb(255, 255, 255);
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #bdbdbd;
+  color: white;
 }
 
 #loginForm {
@@ -341,6 +366,24 @@ canvas {
 
 .loginInput {
   margin-top: 10px;
+  height: 30px;
+  width: 20vw;
+  border: 1px solid #000000;
+  border-radius: 5px;
+}
+
+.loginInput.loginSubmitButton {
+  margin-top: 20px;
+  height: 30px;
+  border: 1px solid #2cac45;
+  border-radius: 5px;
+  background-color: #2a8d3e;
+  color: white;
+  text-shadow: 1px 0.5px rgb(0, 0, 0)
+}
+
+.loginInput.loginSubmitButton:active {
+  background-color: #2cac45;
 }
 
 #registerLink {
@@ -349,9 +392,20 @@ canvas {
 
 /* register stypes */
 
+#registerTitle {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 70px;
+  white-space: nowrap; /* Prevents text from breaking */
+}
+
 #registerHeader {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   background-color: rgb(74, 78, 105);
 }
 
@@ -360,10 +414,21 @@ canvas {
   height: 100vh;
 }
 
+#registerContentContainer {
+  display: flex;
+  justify-content: center;
+}
+
 #registerContent {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 10%;
+  border: 2px solid rgb(255, 255, 255);
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #bdbdbd;
+  color: white;
 }
 
 #registerForm {
@@ -374,4 +439,26 @@ canvas {
 
 .registerInput {
   margin-top: 10px;
+  height: 30px;
+  width: 20vw;
+  border: 1px solid #000000;
+  border-radius: 5px;
+}
+
+.registerInput.registerSubmitButton {
+  margin-top: 20px;
+  height: 30px;
+  border: 1px solid #2cac45;
+  border-radius: 5px;
+  background-color: #2a8d3e;
+  color: white;
+  text-shadow: 1px 0.5px rgb(0, 0, 0)
+}
+
+.registerInput.registerSubmitButton:active {
+  background-color: #2cac45;
+}
+
+#loginLink {
+  margin-top: 20px;
 }
