@@ -160,3 +160,5 @@ profileButton.onmouseleave = function () {
 profileButton.onclick = function () { //checks if logged in
   window.location.href = "login.html";
 };
+
+

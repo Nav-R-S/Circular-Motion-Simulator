@@ -1,43 +1,84 @@
 const express = require("express");
-const cors = require("cors");
 const mysql = require("mysql2");
-
+const cors = require("cors"); // Add this line
 const app = express();
-const port = 5000;
+const port = 3000;
 
-// Middleware to allow cross-origin requests
-app.use(cors());
+// Enable CORS for all routes
+app.use(cors()); // This will allow all origins. You can configure it for specific origins too.
 
-// Middleware to parse JSON data from the frontend
-app.use(express.json());
+app.use(express.json()); // Middleware to parse JSON request bodies
 
-const db = mysql.createConnection({
+// Create a MySQL connection pool
+const pool = mysql.createPool({
   host: "srv1475.hstgr.io",
   user: "u381396247_NSasikumar",
   password: "Psn&paD?9",
   database: "u381396247_NSasikumar",
 });
 
-// Check the connection
-db.connect((err) => {
-  if (err) {
-    console.error("Database connection failed:", err.stack);
-    return;
-  }
-  console.log("Connected to the database");
-});
+// insert new user details
+app.post("/insertUser", (req, res) => {
 
-// API route to add a user
-app.post("/add-userdata", (req, res) => {
   const { userID, username, password } = req.body;
-  const sql = "INSERT INTO UserData (UserID	Username	Password) VALUES (?, ?, ?)"; // Change to UserData table
-  db.query(sql, [userID, username, password], (err, result) => {
-    if (err) throw err;
-    res.json({ message: "User data added", userId: result.insertId });
+
+  const query = "INSERT INTO `UserDetails` (`userID`, `username`, `userPassword`) VALUES (?, ?, ?)";
+
+  pool.execute(query, [userID, username, password], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to insert user details" });
+    }
+
+    res.json({ message: "User details inserted", result });
   });
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+// checks if username exists
+app.post("/checkUsernameExists", (req, res) => {
+  const { username } = req.body;
+  const query = "SELECT * FROM `UserDetails` WHERE `username` = ?";
+  
+  pool.execute(query, [username], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select username" });
+    }
+
+    res.json({ exists: result.length > 0 });
+  });
 });
+
+app.post("/checkUserDetails", (req, res) => {
+  const { username, password } = req.body;
+  const query = "SELECT * FROM `UserDetails` WHERE `username` = ? AND `userPassword` = ?";
+
+  pool.execute(query, [username, password], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select user" });
+    }
+
+    res.json({ exists: result.length > 0 });
+  });
+});
+
+// get the next user ID for user registration
+app.get("/getNextUserID", (req, res) => {
+  const query = "SELECT COUNT(*) AS totUsers FROM `UserDetails`";
+
+  pool.execute(query, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to count IDs" });
+    }
+
+    res.json({ totUsers: result[0].totUsers });
+  });
+});
+
+
+app.listen(port, () => { //test server is running
+  console.log(`Server is running check: http://localhost:${port}`);
+});
+
