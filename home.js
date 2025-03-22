@@ -25,12 +25,17 @@ class SystemElement {
     systemControls.classList.add("systemControls");
     systemFeatures.appendChild(systemControls);
 
-    systemName.onclick = () => {
+    systemName.addEventListener("contextmenu", function(event) {
+      event.preventDefault(); // Prevent default right-click menu
       if (systemFeatures.classList.contains("systemFeaturesShow")) {
         systemFeatures.classList.remove("systemFeaturesShow");
       } else {
         systemFeatures.classList.add("systemFeaturesShow");
       }
+    });
+    
+    systemName.onclick = () => {
+      window.location.href = "index.html";
     };
 
     let renameFunction = (e) => {
@@ -63,7 +68,7 @@ class SystemElement {
     //
   }
 
-  createControlsTextInput(
+  createControlsTextInput( //creates text input for system
     controlsContainer,
     buttonText,
     initalVal,
@@ -87,7 +92,7 @@ class SystemElement {
     propertyInputButton.onclick = submitButtonFunction;
   }
 
-  createButton(parent, title, clickFunction) {
+  createButton(parent, title, clickFunction) { //creates button for system
     const button = document.createElement("button");
     button.innerHTML = title;
     button.onclick = clickFunction;
@@ -115,7 +120,7 @@ class SystemElement {
       valuesContainer.appendChild(valueElement);
     }
 
-    titleElement.onclick = () => {
+    titleElement.onclick = () => { //shows details in info box
       if (valuesContainer.classList.contains("valuesContainerShow")) {
         valuesContainer.classList.remove("valuesContainerShow");
       } else {
@@ -125,7 +130,7 @@ class SystemElement {
   }
 }
 
-sysList = [];
+sysList = []; //list of systems
 
 let createButton = document.getElementById("systemCreateButton");
 

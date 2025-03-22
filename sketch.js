@@ -78,9 +78,46 @@ class System {
     let createParticleButton = document.getElementById("createParticleButton");
     let createPointButton = document.getElementById("createPointButton");
     let homeButton = document.getElementById("homeButton");
-
+    let saveButton = document.getElementById("saveButton");
+    let binButton = document.getElementById("binButton");
+    
     timeBar.max = 0;
     timeBar.min = 0;
+
+    saveButton.onmousedown = function () {
+      saveButton.src = "images/savePressed.png";
+      saveButton.classList.toggle("toolbarButtonPressed");
+    };
+
+    saveButton.onmouseup = function () {
+      saveButton.src = "images/save.png";
+      saveButton.classList.toggle("toolbarButtonPressed");
+    };
+
+    saveButton.onmouseleave = function () {
+      saveButton.src = "images/save.png";
+      if (saveButton.classList.contains("toolbarButtonPressed")) {
+        saveButton.classList.toggle("toolbarButtonPressed");
+      };
+    };
+
+    homeButton.onmousedown = function () {
+      homeButton.src = "images/homeColouredPressed.png";
+      homeButton.classList.toggle("toolbarButtonPressed");
+    };
+
+    homeButton.onmouseup = function () {
+      homeButton.src = "images/homeColoured.png";
+      homeButton.classList.toggle("toolbarButtonPressed");
+    };
+    
+    homeButton.onmouseleave = function () {
+      homeButton.src = "images/homeColoured.png";
+      homeButton.classList.toggle("toolbarButtonPressed");
+      if (homeButton.classList.contains("toolbarButtonPressed")) {
+        homeButton.classList.toggle("toolbarButtonPressed");
+      }
+    };
 
     homeButton.onclick = () => {
       window.location.href = "home.html";
@@ -156,6 +193,13 @@ class System {
       resetButton.classList.toggle("toolbarButtonPressed");
     };
 
+    resetButton.onmouseleave = () => {
+      resetButton.src = "images/resetButtonColoured.png";
+      if (resetButton.classList.contains("toolbarButtonPressed")) {
+        resetButton.classList.toggle("toolbarButtonPressed");
+      }
+    };
+
     resetButton.onclick = () => {
       this.resetSys();
       for (let particle of this.particles) {
@@ -164,6 +208,36 @@ class System {
           particle.updatePosition();
         };
       };
+    };
+
+    profileButton.onmousedown = function () {
+      profileButton.src = "images/profileColouredPressed.png";
+      profileButton.classList.toggle("toolbarButtonPressed");
+    };
+    profileButton.onmouseup = function () {
+      profileButton.src = "images/profileColoured.png";
+      profileButton.classList.toggle("toolbarButtonPressed");
+    };
+    profileButton.onmouseleave = function () {
+      profileButton.src = "images/profileColoured.png";
+      if (profileButton.classList.contains("toolbarButtonPressed")) {
+        profileButton.classList.toggle("toolbarButtonPressed");
+      }
+    };
+
+    binButton.onmousedown = function () {
+      binButton.src = "images/trashColouredPressed.png";
+      binButton.classList.toggle("toolbarButtonPressed");
+    };
+    binButton.onmouseup = function () {
+      binButton.src = "images/trashColoured.png";
+      binButton.classList.toggle("toolbarButtonPressed");
+    };
+    binButton.onmouseleave = function () {
+      binButton.src = "images/trashColoured.png";
+      if (binButton.classList.contains("toolbarButtonPressed")) {
+        binButton.classList.toggle("toolbarButtonPressed");
+      }
     };
 
     objectsMenuButton.onclick = () => {

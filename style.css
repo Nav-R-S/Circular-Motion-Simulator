@@ -259,6 +259,18 @@ canvas {
   font-size: 30px;
   height: 70px;
   border-radius: 10px;
+  border: 2px solid rgb(93, 98, 129);
+  user-select: none;
+}
+
+.systemName:hover {
+  background-color: rgb(93, 98, 129);
+}
+
+.systemName:active {
+  height: 68px;
+  width: 98%;
+  margin: auto;
 }
 
 .systemElement {
@@ -268,6 +280,7 @@ canvas {
 #systemCreateButton {
   margin: 20px;
   width: 80px;
+  
   /* user-select: none; */
    
 }

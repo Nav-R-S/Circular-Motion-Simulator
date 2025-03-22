@@ -3,6 +3,7 @@ const mysql = require("mysql2");
 const cors = require("cors"); // Add this line
 const app = express();
 const port = 3000;
+const bcrypt = require("bcryptjs");
 
 // Enable CORS for all routes
 app.use(cors()); // This will allow all origins. You can configure it for specific origins too.
@@ -18,13 +19,14 @@ const pool = mysql.createPool({
 });
 
 // insert new user details
-app.post("/insertUser", (req, res) => {
-
+app.post("/insertUser", async (req, res) => {
   const { userID, username, password } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  const query = "INSERT INTO `UserDetails` (`userID`, `username`, `userPassword`) VALUES (?, ?, ?)";
+  const query =
+    "INSERT INTO `UserDetails` (`userID`, `username`, `userPassword`) VALUES (?, ?, ?)";
 
-  pool.execute(query, [userID, username, password], (err, result) => {
+  pool.execute(query, [userID, username, hashedPassword], (err, result) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: "Failed to insert user details" });
@@ -38,7 +40,7 @@ app.post("/insertUser", (req, res) => {
 app.post("/checkUsernameExists", (req, res) => {
   const { username } = req.body;
   const query = "SELECT * FROM `UserDetails` WHERE `username` = ?";
-  
+
   pool.execute(query, [username], (err, result) => {
     if (err) {
       console.error(err);
@@ -49,17 +51,53 @@ app.post("/checkUsernameExists", (req, res) => {
   });
 });
 
-app.post("/checkUserDetails", (req, res) => {
-  const { username, password } = req.body;
-  const query = "SELECT * FROM `UserDetails` WHERE `username` = ? AND `userPassword` = ?";
+// app.post("/checkUserDetails", (req, res) => {
+//   const { username, password } = req.body;
+//   const query = "SELECT * FROM `UserDetails` WHERE `username` = ?";
 
-  pool.execute(query, [username, password], (err, result) => {
+//   pool.execute(query, [username, password], (err, result) => {
+//     if (err) {
+//       console.error(err);
+//       return res.status(500).json({ error: "Failed to select user" });
+//     }
+
+//     res.json({ exists: result.length > 0 });
+//   });
+// });
+
+app.post("/checkUserDetails", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required" });
+  }
+
+  const query = "SELECT * FROM `UserDetails` WHERE `username` = ?";
+
+  pool.execute(query, [username], async (err, result) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: "Failed to select user" });
     }
 
-    res.json({ exists: result.length > 0 });
+    if (result.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const storedHashedPassword = result[0].userPassword;
+    const isPasswordValid = await bcrypt.compare(password, storedHashedPassword);
+
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: "Invalid password" });
+    }
+
+    //console.log("Login successful" + result[0]);
+
+    res.json({
+      message: "Login successful",
+      userID: result[0].userID,
+      exists: true, // Indicate that the user exists and login is successful
+    });
   });
 });
 
@@ -77,8 +115,7 @@ app.get("/getNextUserID", (req, res) => {
   });
 });
 
-
-app.listen(port, () => { //test server is running
+app.listen(port, () => {
+  //test server is running
   console.log(`Server is running check: http://localhost:${port}`);
 });
-

@@ -15,27 +15,35 @@ document.getElementById('loginForm').addEventListener('submit', async function (
       return;
   }
 
-  try { //checking if details exists
-     const response = await fetch("http://localhost:3000/checkUserDetails", {
-       method: "POST",
-       headers: {
-         "Content-Type": "application/json",
-       },
-       body: JSON.stringify({ username, password }), // Send username and password as JSON
-     });
-    
-    if (response.ok) { //checks if response is successful
-      const data = await response.json();
+  try {
+    const response = await fetch("http://localhost:3000/checkUserDetails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }), // Send username and password as JSON
+    });
 
-      if (data && data.exists) { //checks if username exists and if response exists
-        console.log("User exists");
+    const data = await response.json(); // Get the JSON data from the response
+
+    console.log("Response data:", data); // Log the response data
+
+    if (response.ok) {
+      // checks if the response is successful
+      if (data.message === "Login successful") {
+
+        localStorage.setItem("userID", data.userID); // Store the username (or any other necessary data)
+        localStorage.setItem("LoggedOn", true); // Store the login state
+
+        //window.location.href = "home.html"; // Redirect to the home page after successful login
       } else {
-        alert("User does not exist"); // Show error message
-        return;
+        alert("User does not exist or incorrect password");
       }
+    } else {
+      alert("Error: " + data.error || "Something went wrong");
     }
+  } catch (error) {
+    alert("Error: " + error.message);
   }
-  catch (error) {
-    alert('Error: ' + error.message);
-  }
+
 });
