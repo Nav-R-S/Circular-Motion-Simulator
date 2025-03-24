@@ -57,6 +57,12 @@ class Vector {
     let newY = this.y -= v.y;
     return new Vector(newX, newY);
   };
+
+  getCopy() {
+    let newX = this.x;
+    let newY = this.y;
+    return new Vector(newX, newY);
+  }
 };
 
 class Stack {
@@ -117,6 +123,7 @@ class System {
     this.smallestY = -2000;
 
     this.coefficientOfRestitution = 1;
+    this.delete = false;
   }
 
   setup() {
@@ -294,8 +301,10 @@ class System {
       
       if (binButton.classList.contains("toolbarButtonPressed")) {
         binButton.src = "images/trashColoured.png";
+        this.delete = false;
       } else {
         binButton.src = "images/trashColouredPressed.png";
+        this.delete = true;
       }
       binButton.classList.toggle("toolbarButtonPressed");
     };
@@ -959,7 +968,7 @@ class Particle {
     this.overlapedObjects = [];
 
     this.inFreeFall = false;
-    this.freeFallInitialConditions = new Stack();
+    this.freeFallInitialConditions = {};
 
     // let s0 = new Vector(this.pos.x, this.pos.y);
     // let u = new Vector(20, this.velocity.y);
@@ -975,7 +984,6 @@ class Particle {
   }
 
   update(t) {
-
     //for particle
     // let s0 = new Vector(this.pos.x, this.pos.y);
     // let u = new Vector(this.velocity.x, this.velocity.y);
@@ -985,7 +993,7 @@ class Particle {
 
     //for rod
     //this.updateRod(t);
-    //this.updateVelocity();
+    //this.updateVelocityRod();
 
     //for str
     this.updateString(t);
@@ -994,13 +1002,20 @@ class Particle {
     //this.sys.checkCollisions(this);
   }
 
+  updateVelocityRod() {
+    this.updateVelocity();
+    this.displayVelocity();
+  }
+
   updateVelocity() {
     let vec = new Vector(this.pos.x, -1 * this.pos.y); //because the coordinate system is flipped with positive y axis going down, we multiply by -1 to get the true angle
     let ang = Math.PI / 2 - vec.getAngle();
     let velocity = -1 * (this.angVelocity * (this.lineDist / this.sys.scale)); //-1 to account for the sign of the velcoity component
 
     this.velocity.setXAndY(velocity, ang);
+  }
 
+  displayVelocity() {
     stroke(255, 0, 0);
     line(
       this.x,
@@ -1020,34 +1035,54 @@ class Particle {
     return [this.initialConditions[closestTime], parseFloat(closestTime)];
   }
 
+  getFreeFallIntialConditions(t) {
+    console.log(this.freeFallInitialConditions, "freefallinitialconditions IN GET FREE FALL");
+    let closestTime = 0;
+    for (let time in this.freeFallInitialConditions) {
+      if (parseFloat(time) <= t && parseFloat(time) > closestTime) {
+        closestTime = time;
+      }
+    }
+    return [this.freeFallInitialConditions[closestTime], parseFloat(closestTime)];
+  }
+
   getTension() {
     let tension = 0;
     //console.log(this.velocity.x, this.velocity.y, "velocity");
-    let tangentialVelocityComponent = this.getTangentialVelocity(this.pos, this.velocity);
+    let tangentialVelocityComponent = this.getTangentialVelocity(
+      this.pos,
+      this.velocity
+    );
     let currVel = tangentialVelocityComponent.getMagnitude();
     console.log(currVel, "currVel");
     let currAngle = -1 * this.pos.getAngle(); //uses standard [in polar form] angle (diff to the inital angle defention as it needs angle from the lower vertical)
     //console.log(currAngle, "currangle");
     //console.log(currVel, "currVel");
-    console.log(this.mass, currVel ** 2, this.lineDist, this.sys.g, Math.sin(Math.abs(currAngle)))
+    console.log(
+      this.mass,
+      currVel ** 2,
+      this.lineDist,
+      this.sys.g,
+      Math.sin(Math.abs(currAngle))
+    );
     if (currAngle >= 0 && currAngle < Math.PI / 2) {
       //1st quadrant --> T+Mgsin(theta) = Ma
       tension =
         this.mass * (currVel ** 2 / this.lineDist) -
         this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
     } else if (currAngle >= Math.PI / 2 && currAngle <= Math.PI) {
-      //2nd quadrant --> T+Mgcos(theta) = Ma
+      //2nd quadrant --> T+Mgsin(theta) = Ma
       tension =
         this.mass * (currVel ** 2 / this.lineDist) -
-        this.mass * this.sys.g * Math.cos(Math.abs(currAngle));
+        this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
     } else if (
       currAngle >= -1 * (Math.PI / 2) &&
       currAngle < -1 * (Math.PI / 2)
     ) {
-      //3rd quadrant --> T-Mgcos(theta) = Ma
+      //3rd quadrant --> T-Mgsin(theta) = Ma
       tension =
         this.mass * (currVel ** 2 / this.lineDist) +
-        this.mass * this.sys.g * Math.cos(Math.abs(currAngle));
+        this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
     } else {
       //4th quadrant --> T-Mgsin(theta) = Ma
       tension =
@@ -1058,17 +1093,26 @@ class Particle {
     return tension;
   }
 
-    particleProjMotion(t) {
-    console.log("IN PROJ MOTION ------------------------------------------------------------------------------------------>>>>>>>")
+  particleProjMotion(t) {
+    console.log(
+      "IN PROJ MOTION ------------------------------------------------------------------------------------------>>>>>>>"
+    );
     let s = new Vector(0, 0);
     let v = new Vector(0, 0);
 
-    let latestInitialConditions = this.freeFallInitialConditions.peek();
 
+    let latestInitialConditionsList = this.getFreeFallIntialConditions(t);
+    console.log(latestInitialConditionsList, "latestInitialConditionsList");
+    let latestInitialConditions = latestInitialConditionsList[0];
+    let t0 = latestInitialConditionsList[1];
+    //let latestInitialConditions = this.freeFallInitialConditions.peek();
+
+
+    console.log("lates inituial conditions for proj mot:", latestInitialConditions);
     let s0 = latestInitialConditions[0];
     let u = latestInitialConditions[1];
     let a = latestInitialConditions[2];
-    let t0 = latestInitialConditions[3];
+    //let t0 = latestInitialConditions[3];
 
     console.log("inituial conditions for proj mot  {");
     console.log(s0.x, s0.y, "s0");
@@ -1078,7 +1122,9 @@ class Particle {
     console.log(t, "t");
     console.log("} (end)");
 
-    s = s0.getAddition(u.getScale(t - t0)).getAddition(a.getScale(0.5 * (t - t0) ** 2));
+    s = s0
+      .getAddition(u.getScale(t - t0))
+      .getAddition(a.getScale(0.5 * (t - t0) ** 2));
     v = u.getAddition(a.getScale(t - t0));
 
     console.log(s.x, s.y, "s");
@@ -1097,18 +1143,24 @@ class Particle {
     console.log(this.velocity.x, this.velocity.y, "velocity");
   }
 
-
   projMotion(t) {
-    console.log("IN PROJ MOTION ------------------------------------------------------------------------------------------>>>>>>>")
+    console.log(
+      "IN PROJ MOTION ------------------------------------------------------------------------------------------>>>>>>>"
+    );
     let s = new Vector(0, 0);
     let v = new Vector(0, 0);
 
-    let latestInitialConditions = this.freeFallInitialConditions.peek();
+    let latestInitialConditionsList = this.getFreeFallIntialConditions(t);
+    console.log(latestInitialConditionsList, "latestInitialConditionsList");
+    let latestInitialConditions = latestInitialConditionsList[0];
+    let t0 = latestInitialConditionsList[1];
+    
 
+    console.log("lates inituial conditions for proj mot:", latestInitialConditions);
     let s0 = latestInitialConditions[0];
     let u = latestInitialConditions[1];
     let a = latestInitialConditions[2];
-    let t0 = latestInitialConditions[3];
+    
 
     console.log("inituial conditions for proj mot  {");
     console.log(s0.x, s0.y, "s0");
@@ -1118,14 +1170,18 @@ class Particle {
     console.log(t, "t");
     console.log("} (end)");
 
-    s = s0.getAddition(u.getScale(t - t0)).getAddition(a.getScale(0.5 * (t - t0) ** 2));
+    s = s0
+      .getAddition(u.getScale(t - t0))
+      .getAddition(a.getScale(0.5 * (t - t0) ** 2));
     v = u.getAddition(a.getScale(t - t0));
 
     console.log(s.x, s.y, "s FINAL");
     console.log(v.x, v.y, "v FINAL");
 
+    console.log(s0.x, s0.y, "s0 BEFORE");
     this.pos.x = s.x;
     this.pos.y = s.y;
+    console.log(s0.x, s0.y, "s0 AFTER");
     this.x = this.originPoint.x + this.pos.x;
     this.y = this.originPoint.y + this.pos.y;
 
@@ -1134,18 +1190,18 @@ class Particle {
 
     this.velocity.x = v.x;
     this.velocity.y = v.y;
-    //console.log(this.velocity.x, this.velocity.y, "velocity");
+    
   }
 
   getTangentialVelocity(pos, vel) {
     let positionVec = new Vector(pos.x, pos.y);
     let velocityVec = new Vector(vel.x, vel.y);
 
-    //let rMag = positionVec.mag();// Magnitude of position vector
-    let rHat = positionVec.getUnitVector();// Unit radial vector
-    let vRadial = rHat.getScale(velocityVec.getDotProduct(rHat));// Radial component of velocity
-    //let vRadial = p5.Vector.mult(rHat, vel.dot(rHat));// Radial component of velocity
-    let vTangential = velocityVec.getSubtraction(vRadial);// Tangential component
+
+    let rHat = positionVec.getUnitVector(); // Unit radial vector
+    let vRadial = rHat.getScale(velocityVec.getDotProduct(rHat)); // Radial component of velocity
+    
+    let vTangential = velocityVec.getSubtraction(vRadial); // Tangential component
 
     return vTangential;
   }
@@ -1161,9 +1217,12 @@ class Particle {
     if (this.inFreeFall) {
       //check if not in freefall anymore
       //if in freefall then continue proj motion
-      if (dist(this.x, this.y, this.originPoint.x, this.originPoint.y) > this.lineDist) {
+      if (
+        dist(this.x, this.y, this.originPoint.x, this.originPoint.y) >
+        this.lineDist
+      ) {
         //if the distance between the particle and the origin point is greater than the line distance then the string is no longer slack
-      
+
         let posMag = this.pos.getMagnitude();
 
         this.pos.x = this.lineDist * (this.pos.x / posMag);
@@ -1177,9 +1236,12 @@ class Particle {
         if (tension > 0) {
           this.inFreeFall = false;
           this.initialAngle = this.getAngleFromPos();
-          //console.log(this.velocity.x, this.velocity.y, "velocity");
-          let tangentialVelocityComponent = this.getTangentialVelocity(this.pos, this.velocity);
-          //console.log(tangentialVelocityComponent.x, tangentialVelocityComponent.y, "tangential velocity");
+          
+          let tangentialVelocityComponent = this.getTangentialVelocity(
+            this.pos,
+            this.velocity
+          );
+          
 
           if (tangentialVelocityComponent.getCrossProduct(this.pos) < 0) {
             //if the cross product is negative then rotation is clockwise
@@ -1188,21 +1250,27 @@ class Particle {
             this.initialVel = tangentialVelocityComponent.getMagnitude();
           }
 
-          //this.initialVel = tangentialVelocityComponent.getMagnitude();
-          this.initialConditions[t] = [this.initialAngle, this.initialVel, this.lineDist];
-          //console.log("initial conditions for rod", this.initialConditions[t]);
+          
+          this.initialConditions[t] = [
+            this.initialAngle,
+            this.initialVel,
+            this.lineDist,
+          ];
+          
         }
-
       } else {
         //if in freefall then continue proj motion
         this.projMotion(t);
-        //console.log(this.velocity.x, this.velocity.y, "velocity before projMotion");
+        
       }
     } else {
       //getting initial conditions
       let initalConditions = this.getIntialConditions(t);
       let initalConditionsList = initalConditions[0];
-      console.log("initial conditions for rod INITAL LIST", initalConditionsList);
+      console.log(
+        "initial conditions for rod INITAL LIST",
+        initalConditionsList
+      );
       let startTime = initalConditions[1];
 
       //setting up the initial conditions for the differential equation
@@ -1210,7 +1278,7 @@ class Particle {
       this.initialVel = initalConditionsList[1];
       this.lineDist = initalConditionsList[2];
 
-      //let tension = this.getTension();
+      
 
       if (tension > 0) {
         let angAndAngVel = rungeKutta(
@@ -1227,14 +1295,23 @@ class Particle {
 
         this.angVelocity = angAndAngVel[1];
         this.updatePosition();
+        this.updateVelocity();
       } else {
         //set inital conditions for proj motion
+        console.log("IN FREE FALL is trueee INITAL CONDITONS SETTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
         this.inFreeFall = true;
-        let s0 = new Vector(this.pos.x, this.pos.y);
-        let u = new Vector(this.velocity.x, this.velocity.y);
-        let a = new Vector(0, this.sys.g); //dont * -1 as the y axis is flipped in the coordinate system
-        this.freeFallInitialConditions.push([s0, u, a, t]);
-        //projMotion(t); // in free fall
+        
+        const s0 = new Vector(this.pos.x, this.pos.y);
+        
+        const u = new Vector(0, 0);
+        console.log(u.x, u.y, "u");
+        
+        const a = new Vector(0, this.sys.g); //dont * -1 as the y axis is flipped in the coordinate system
+        let lst = [s0, u, a];
+        console.log(lst[1].x, lst[1].y, "lst uuuu");
+
+        this.freeFallInitialConditions[t] = lst;
+        console.log(this.freeFallInitialConditions[t][1].y, "freefallinitialconditions");
       }
     }
   }
@@ -1493,14 +1570,24 @@ function mouseDragged() {
 function mousePressed() {
   for (let e of sys1.elements) {
     if ((mouseX - e.x) ** 2 + (mouseY - e.y) ** 2 <= e.radius ** 2) { //checks if distance between mouse and element < element radius (ie element clicked)
-      if (mouseButton === LEFT) {
-        e.drag = true;
-      } else if (sys1.points.includes(e) && mouseButton === RIGHT) { //if a point is rightclicked
-        e.lineDrag = true;
-        e.lineLocked = false;
-        if (e.particle) { //checks if connected to a particle --> if so then gets rid of conenction
-          e.particle.originPoint = null;
-          e.particle = null;
+      if (sys1.delete) {
+        if (sys1.points.includes(e)) {
+          sys1.points = sys1.points.filter(element => element !== e);
+          sys1.elements = sys1.elements.filter(element => element !== e);
+        } else if (sys1.particles.includes(e)) {
+          sys1.particles = sys1.particles.filter(element => element !== e);
+          sys1.elements = sys1.elements.filter(element => element !== e);
+        }
+      } else {
+        if (mouseButton === LEFT) {
+          e.drag = true;
+        } else if (sys1.points.includes(e) && mouseButton === RIGHT) { //if a point is rightclicked
+          e.lineDrag = true;
+          e.lineLocked = false;
+          if (e.particle) { //checks if connected to a particle --> if so then gets rid of conenction
+            e.particle.originPoint = null;
+            e.particle = null;
+          }
         }
       }
     }
