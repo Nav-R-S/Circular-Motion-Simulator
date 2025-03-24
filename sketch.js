@@ -47,14 +47,14 @@ class Vector {
   };
 
   getAddition(v) {
-    let newX = this.x += v.x;
-    let newY = this.y += v.y;
+    let newX = this.x + v.x;
+    let newY = this.y + v.y;
     return new Vector(newX, newY);
   };
 
   getSubtraction(v) {
-    let newX = this.x -= v.x;
-    let newY = this.y -= v.y;
+    let newX = this.x - v.x;
+    let newY = this.y - v.y;
     return new Vector(newX, newY);
   };
 
@@ -1036,7 +1036,7 @@ class Particle {
   }
 
   getFreeFallIntialConditions(t) {
-    console.log(this.freeFallInitialConditions, "freefallinitialconditions IN GET FREE FALL");
+    //console.log(this.freeFallInitialConditions, "freefallinitialconditions IN GET FREE FALL");
     let closestTime = 0;
     for (let time in this.freeFallInitialConditions) {
       if (parseFloat(time) <= t && parseFloat(time) > closestTime) {
@@ -1054,17 +1054,17 @@ class Particle {
       this.velocity
     );
     let currVel = tangentialVelocityComponent.getMagnitude();
-    console.log(currVel, "currVel");
+    //console.log(currVel, "currVel");
     let currAngle = -1 * this.pos.getAngle(); //uses standard [in polar form] angle (diff to the inital angle defention as it needs angle from the lower vertical)
     //console.log(currAngle, "currangle");
     //console.log(currVel, "currVel");
-    console.log(
-      this.mass,
-      currVel ** 2,
-      this.lineDist,
-      this.sys.g,
-      Math.sin(Math.abs(currAngle))
-    );
+    // console.log(
+    //   this.mass,
+    //   currVel ** 2,
+    //   this.lineDist,
+    //   this.sys.g,
+    //   Math.sin(Math.abs(currAngle))
+    // );
     if (currAngle >= 0 && currAngle < Math.PI / 2) {
       //1st quadrant --> T+Mgsin(theta) = Ma
       tension =
@@ -1140,7 +1140,7 @@ class Particle {
 
     this.velocity.x = v.x;
     this.velocity.y = v.y;
-    console.log(this.velocity.x, this.velocity.y, "velocity");
+    //console.log(this.velocity.x, this.velocity.y, "velocity");
   }
 
   projMotion(t) {
@@ -1151,14 +1151,14 @@ class Particle {
     let v = new Vector(0, 0);
 
     let latestInitialConditionsList = this.getFreeFallIntialConditions(t);
-    console.log(latestInitialConditionsList, "latestInitialConditionsList");
+    //console.log(latestInitialConditionsList, "latestInitialConditionsList");
     let latestInitialConditions = latestInitialConditionsList[0];
     let t0 = latestInitialConditionsList[1];
     
 
-    console.log("lates inituial conditions for proj mot:", latestInitialConditions);
-    let s0 = latestInitialConditions[0];
-    let u = latestInitialConditions[1];
+    //console.log("lates inituial conditions for proj mot:", latestInitialConditions);
+    let s0 = latestInitialConditions[0].getScale(1 / this.sys.scale);
+    let u = latestInitialConditions[1].getScale(1 / this.sys.scale);
     let a = latestInitialConditions[2];
     
 
@@ -1170,18 +1170,14 @@ class Particle {
     console.log(t, "t");
     console.log("} (end)");
 
-    s = s0
-      .getAddition(u.getScale(t - t0))
-      .getAddition(a.getScale(0.5 * (t - t0) ** 2));
-    v = u.getAddition(a.getScale(t - t0));
+    s = (s0.getAddition(u.getScale(t - t0)).getAddition(a.getScale(0.5 * (t - t0) ** 2))).getScale(this.sys.scale);
+    v = (u.getAddition(a.getScale(t - t0))); //.getScale(this.sys.scale);
 
     console.log(s.x, s.y, "s FINAL");
     console.log(v.x, v.y, "v FINAL");
-
-    console.log(s0.x, s0.y, "s0 BEFORE");
     this.pos.x = s.x;
     this.pos.y = s.y;
-    console.log(s0.x, s0.y, "s0 AFTER");
+    
     this.x = this.originPoint.x + this.pos.x;
     this.y = this.originPoint.y + this.pos.y;
 
@@ -1212,15 +1208,12 @@ class Particle {
     //need to get tension
 
     let tension = this.getTension();
-    console.log(tension, "tension");
+    console.log(tension, "tensionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
 
     if (this.inFreeFall) {
       //check if not in freefall anymore
       //if in freefall then continue proj motion
-      if (
-        dist(this.x, this.y, this.originPoint.x, this.originPoint.y) >
-        this.lineDist
-      ) {
+      if (dist(this.x, this.y, this.originPoint.x, this.originPoint.y) > this.lineDist) {
         //if the distance between the particle and the origin point is greater than the line distance then the string is no longer slack
 
         let posMag = this.pos.getMagnitude();
@@ -1267,10 +1260,10 @@ class Particle {
       //getting initial conditions
       let initalConditions = this.getIntialConditions(t);
       let initalConditionsList = initalConditions[0];
-      console.log(
-        "initial conditions for rod INITAL LIST",
-        initalConditionsList
-      );
+      // console.log(
+      //   "initial conditions for rod INITAL LIST",
+      //   initalConditionsList
+      // );
       let startTime = initalConditions[1];
 
       //setting up the initial conditions for the differential equation
@@ -1298,22 +1291,29 @@ class Particle {
         this.updateVelocity();
       } else {
         //set inital conditions for proj motion
-        console.log("IN FREE FALL is trueee INITAL CONDITONS SETTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+        //console.log("IN FREE FALL is trueee INITAL CONDITONS SETTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
         this.inFreeFall = true;
         
         const s0 = new Vector(this.pos.x, this.pos.y);
         
-        const u = new Vector(0, 0);
-        console.log(u.x, u.y, "u");
+        const u = new Vector(this.velocity.x, this.velocity.y);
+        //console.log(u.x, u.y, "u");
         
         const a = new Vector(0, this.sys.g); //dont * -1 as the y axis is flipped in the coordinate system
         let lst = [s0, u, a];
-        console.log(lst[1].x, lst[1].y, "lst uuuu");
+        console.log("INITAL FREE FALL CONDITIONS =======================================================>>");
+        console.log(s0.x, s0.y, "s0");
+        console.log(u.x, u.y, "u");
+        console.log(a.x, a.y, "a");
+        console.log("===========================================================================>>");
+
+        //console.log(lst[1].x, lst[1].y, "lst uuuu");
 
         this.freeFallInitialConditions[t] = lst;
-        console.log(this.freeFallInitialConditions[t][1].y, "freefallinitialconditions");
+        //console.log(this.freeFallInitialConditions[t][1].y, "freefallinitialconditions");
       }
     }
+    this.displayVelocity();
   }
 
   rodMovement(t) {
@@ -1409,7 +1409,7 @@ class Particle {
     //gets position vector from originPoint set as the origin
 
     //this.initialAngle = -1 * this.pos.getAngle() + Math.PI / 2;
-    console.log(this.pos.getAngle(), "initial angle fro, getAngle()");
+    //console.log(this.pos.getAngle(), "initial angle fro, getAngle()");
     console.log(
       -1 * this.pos.getAngle() + Math.PI / 2,
       "initial angle SETTTTT"
