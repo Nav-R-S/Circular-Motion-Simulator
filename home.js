@@ -35,9 +35,11 @@ class SystemElement {
     });
     
     systemName.onclick = () => {
-      //window.location.href = "index.html";
+      window.location.href = "index.html";
       // get sys id
-      window.location.href = `index.html?system=${systemId}`;
+
+
+      // window.location.href = `index.html?system=${systemId}`;
     };
 
     let renameFunction = (e) => {

@@ -780,7 +780,7 @@ class System {
       };
 
       let createGraphLinkFunction = () => {
-        sys.loadData();
+        sys.storeData();
         //window.location.href = "graph.html";
       }
 
@@ -837,6 +837,85 @@ class System {
   };
 
   loadData() {
+    
+    let getData = localStorage.getItem("sysData"); // gets data of system
+
+    if (getData) {
+      let systemDetails = JSON.parse(getData);//parses json --> to be able to be used in js
+      localStorage.removeItem("sysData");//removes info for next use
+
+      //load data for sys
+      this.id = systemDetails.id
+      this.g = systemDetails.g;
+      this.scale = systemDetails.scale;
+      this.t = systemDetails.t;
+      this.t0 = systemDetails.t0;
+      this.coefficientOfRestitution = systemDetails.coefficientOfRestitution;
+
+      //load data for particles
+      for (let i = 0; i < systemDetails.particles.length; i++) {
+        this.createParticle();
+      
+        //assign stored values
+        this.particles[i].id = systemDetails.particles[i].id;
+        //sys is ommitted
+        this.particles[i].radius = systemDetails.particles[i].radius;
+        this.particles[i].pos = new Vector(systemDetails.particles[i].pos.x, systemDetails.particles[i].pos.y); //{ x: particle.pos.x, y: particle.pos.y }, //Vector obj
+        this.particles[i].x = systemDetails.particles[i].x;
+        this.particles[i].y = systemDetails.particles[i].y;
+        this.particles[i].angle = systemDetails.particles[i].angle;
+        this.particles[i].velocity = new Vector(systemDetails.particles[i].velocity.x, systemDetails.particles[i].velocity.y) 
+        this.particles[i].mass = systemDetails.particles[i].mass;
+        //drag is ommitted
+        //originPoint is ommitted
+        this.particles[i].lineDist = systemDetails.particles[i].lineDist;
+        this.particles[i].initialVel = systemDetails.particles[i].initialVel;
+        this.particles[i].initialAngle = systemDetails.particles[i].initialAngle;
+        this.particles[i].colour = systemDetails.particles[i].colour;
+        //lastColl is ommitted
+        this.particles[i].prevVelocity = new Vector(systemDetails.particles[i].prevVelocity.x, systemDetails.particles[i].prevVelocity.y)
+        this.particles[i].updated = systemDetails.particles[i].updated;
+        this.particles[i].initialConditions = JSON.parse(systemDetails.particles[i].initialConditions);
+        //overlapedObjects is ommitted
+        this.particles[i].inFreeFall = systemDetails.particles[i].inFreeFall;
+        this.particles[i].freeFallInitialConditions = JSON.parse(systemDetails.particles[i].freeFallInitialConditions);
+      };
+
+      for (let i = 0; i < systemDetails.points.length; i++) {
+        this.createPoint();
+
+        //assign stored values
+        this.points[i].id = systemDetails.points[i].id;
+        //sys is ommitted
+        this.points[i].x = systemDetails.points[i].x;
+        this.points[i].y = systemDetails.points[i].y;
+        this.points[i].mass = systemDetails.points[i].mass;
+        this.points[i].speed = systemDetails.points[i].speed;
+        this.points[i].radius = systemDetails.points[i].radius;
+        this.points[i].endX = systemDetails.points[i].endX;
+        this.points[i].endY = systemDetails.points[i].endY;
+        this.points[i].drag = systemDetails.points[i].drag;
+        this.points[i].lineDrag = systemDetails.points[i].lineDrag;
+        this.points[i].lineLocked = systemDetails.points[i].lineLocked;
+        //particle is ommitted
+      };
+
+      //create particle point relations
+      for (let particleID in systemDetails.particlePointRelations) {
+        //console.log(particleID);
+        let particle = this.particles.find((particle) => particle.id == particleID);
+        //console.log(particle)
+        let pointID = systemDetails.particlePointRelations[particleID];
+        let point = this.points.find((point) => point.id == pointID);
+
+        particle.originPoint = point;
+        point.particle = particle;
+      };
+    };
+    
+  };
+
+  storeData() {
     let sysData = {
       id: this.id,
       g: this.g,
@@ -874,7 +953,7 @@ class System {
       // this.delete = false;
     
     for (let particle of this.particles) {
-      let newParticleData = {
+      let newParticleData = { // stores particle data (ommitted fields commented)
         id: particle.id,
         // sys: particle.sys,
         radius: particle.radius,
@@ -927,8 +1006,7 @@ class System {
     };
 
     localStorage.setItem("sysData", JSON.stringify(sysData));
-    let getData = localStorage.getItem("sysData");
-    console.log(JSON.parse(getData));
+    
   }
 
   createPoint(x, y) {
@@ -1537,6 +1615,7 @@ class Particle {
 sys1 = new System(1)
 sysList.push(sys1)
 sys1.setup();
+sys1.loadData();
 
 
 
