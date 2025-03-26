@@ -637,6 +637,14 @@ class System {
     propertyInputBox.classList.add("controlsCheckbox");
     propertyInputContainer.appendChild(propertyInputBox);
   }
+
+  createControlsLink(controlsContainer, linkText, linkFunction) {
+    let propertyText = document.createElement("p");
+    propertyText.textContent = linkText;
+    propertyText.onclick = linkFunction;
+    controlsContainer.appendChild(propertyText);
+  }
+  
  
   createParticle(x, y, colour) {
     let particleID = this.particles.length;
@@ -661,7 +669,7 @@ class System {
       const particleContent = document.getElementById("particlesContent");
       let particleElementList = particleContent.children;
 
-      if (this.particleCategoryOn) {
+      if (this.particleCategoryOn) { 
         this.particleCategoryOn = false;
         for (let i = 0; i < particleElementList.length; i++) {
           particleElementList[i].classList.remove("showObject");
@@ -771,6 +779,11 @@ class System {
         };
       };
 
+      let createGraphLinkFunction = () => {
+        sys.loadData();
+        //window.location.href = "graph.html";
+      }
+
       sys.createControlsScrollInput(
         controlsContainer,
         "Particle Radius",
@@ -811,6 +824,8 @@ class System {
         "Set Velocity",
         initialVelocitySubmit
       );
+
+      sys.createControlsLink(controlsContainer, "Graph", createGraphLinkFunction);
     };
 
     particleNameDisplay.onclick = function () {
@@ -820,6 +835,101 @@ class System {
       controls.classList.toggle("showControls");
     };
   };
+
+  loadData() {
+    let sysData = {
+      id: this.id,
+      g: this.g,
+      scale: this.scale,
+      t: this.t,
+      t0: this.t0,
+      coefficientOfRestitution: this.coefficientOfRestitution,
+      particles: [],
+      points: [],
+      particlePointRelations: {}
+    };
+    //for the rest of system:
+
+      //these will be updated dynamically:
+      // this.elements = [];
+      // this.points = [];
+      // this.particles = [];
+
+      //set to normal values (on creation)
+      // this.started = false;
+      // this.play = false;
+
+      // this.particleCreationOn = false;
+      // this.pointCreationOn = false;
+      // this.objectsMenuOpen = false;
+      // this.particleCategoryOn = false;
+
+      // this.grid;
+      // this.width;
+      // this.height;
+      // this.gridSize = 50;
+      // this.smallestX = -2000;
+      // this.smallestY = -2000;
+
+      // this.delete = false;
+    
+    for (let particle of this.particles) {
+      let newParticleData = {
+        id: particle.id,
+        // sys: particle.sys,
+        radius: particle.radius,
+        pos: { x: particle.pos.x, y: particle.pos.y }, //Vector obj
+        x: particle.x,
+        y: particle.y,
+        angle: particle.angle,
+        velocity: { x: particle.velocity.x, y: particle.velocity.y }, //Vector obj
+        mass: particle.mass,
+        //drag: particle.drag,
+        //originPoint: particle.originPoint,
+        lineDist: particle.lineDist,
+        initialVel: particle.initialVel,
+        initialAngle: particle.initialAngle,
+        colour: particle.colour,
+        // lastColl: particle.lastColl,
+        prevVelocity: { x: particle.prevVelocity.x, y: particle.prevVelocity.y }, //Vector obj
+        updated: particle.updated,
+        initialConditions: JSON.stringify(particle.initialConditions),
+        //overlapedObjects: particle.overlapedObjects,
+        inFreeFall: particle.inFreeFall,
+        freeFallInitialConditions: JSON.stringify(particle.freeFallInitialConditions),
+      };
+
+      if (particle.originPoint) {
+        sysData.particlePointRelations[particle.id] = particle.originPoint.id;
+      };
+
+      sysData.particles.push(newParticleData);
+    };
+
+    for (let point of this.points) {
+      let newPointData = {
+        id: point.id,
+        //sys: point.sys, 
+        x: point.x,
+        y: point.y,
+        mass: point.mass,
+        speed: point.speed,
+        radius: point.radius,
+        endX: point.endX,
+        endY: point.endY,
+        drag: point.drag,
+        lineDrag: point.lineDrag,
+        lineLocked: point.lineLocked,
+        //particle: point.particle
+      };
+
+      sysData.points.push(newPointData);
+    };
+
+    localStorage.setItem("sysData", JSON.stringify(sysData));
+    let getData = localStorage.getItem("sysData");
+    console.log(JSON.parse(getData));
+  }
 
   createPoint(x, y) {
     let pointID = this.points.length;
@@ -1054,9 +1164,9 @@ class Particle {
       this.velocity
     );
     let currVel = tangentialVelocityComponent.getMagnitude();
-    //console.log(currVel, "currVel");
+    console.log(currVel, "currVel");
     let currAngle = -1 * this.pos.getAngle(); //uses standard [in polar form] angle (diff to the inital angle defention as it needs angle from the lower vertical)
-    //console.log(currAngle, "currangle");
+    console.log(currAngle, "currangle");
     //console.log(currVel, "currVel");
     // console.log(
     //   this.mass,
@@ -1067,24 +1177,25 @@ class Particle {
     // );
     if (currAngle >= 0 && currAngle < Math.PI / 2) {
       //1st quadrant --> T+Mgsin(theta) = Ma
+      console.log("1st quadrant");
       tension =
         this.mass * (currVel ** 2 / this.lineDist) -
         this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
     } else if (currAngle >= Math.PI / 2 && currAngle <= Math.PI) {
       //2nd quadrant --> T+Mgsin(theta) = Ma
+      console.log("2nd quadrant");
       tension =
         this.mass * (currVel ** 2 / this.lineDist) -
         this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
-    } else if (
-      currAngle >= -1 * (Math.PI / 2) &&
-      currAngle < -1 * (Math.PI / 2)
-    ) {
+    } else if (currAngle <= -1 * (Math.PI / 2) && currAngle > -1 * Math.PI) {
       //3rd quadrant --> T-Mgsin(theta) = Ma
+      console.log("3rd quadrant");
       tension =
         this.mass * (currVel ** 2 / this.lineDist) +
         this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
     } else {
       //4th quadrant --> T-Mgsin(theta) = Ma
+      console.log("4th quadrant");
       tension =
         this.mass * (currVel ** 2 / this.lineDist) +
         this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
@@ -1209,6 +1320,9 @@ class Particle {
 
     let tension = this.getTension();
     console.log(tension, "tensionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
+    console.log(this.inFreeFall, "inFreeFall");
+    console.log(this.sys.t, "time");
+    const isTangent = this.velocity.getDotProduct(this.pos)
 
     if (this.inFreeFall) {
       //check if not in freefall anymore
@@ -1219,7 +1333,7 @@ class Particle {
         let posMag = this.pos.getMagnitude();
 
         this.pos.x = this.lineDist * (this.pos.x / posMag);
-        this.pos.y = this.lineDist * (this.pos.x / posMag);
+        this.pos.y = this.lineDist * (this.pos.y / posMag);
         this.x = this.originPoint.x + this.pos.x;
         this.y = this.originPoint.y + this.pos.y;
 
@@ -1227,6 +1341,8 @@ class Particle {
         this.originPoint.endY = this.y;
 
         if (tension > 0) {
+
+          console.log("STRING TENSE AGAIN :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
           this.inFreeFall = false;
           this.initialAngle = this.getAngleFromPos();
           
@@ -1421,6 +1537,8 @@ class Particle {
 sys1 = new System(1)
 sysList.push(sys1)
 sys1.setup();
+
+
 
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight - 100);

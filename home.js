@@ -35,7 +35,9 @@ class SystemElement {
     });
     
     systemName.onclick = () => {
-      window.location.href = "index.html";
+      //window.location.href = "index.html";
+      // get sys id
+      window.location.href = `index.html?system=${systemId}`;
     };
 
     let renameFunction = (e) => {
@@ -145,6 +147,27 @@ createButton.onmouseleave = function () {
 };
 
 createButton.onclick = function () {
+  //add to sys table + get id
+
+  // async function getNewSysID(params) {
+  //   try { //get count of users to get the next user ID
+  //     const response = await fetch("http://localhost:3000/getNextSysID");
+
+  //     if (response.ok) {
+
+  //       const data = await response.json();
+  //       sysID = data.totUsers; //define userID as the total number of users
+
+  //     } else {
+  //       const errorData = await response.json();
+  //       alert("Error: " + errorData.error);
+  //     }
+  //   } catch (error) {
+  //     alert("Error: " + error.message);
+  //   }
+  // }
+  
+
   let newSystem = new SystemElement(sysList.length);
   newSystem.setup();
   sysList.push(sysList.length + 1);
