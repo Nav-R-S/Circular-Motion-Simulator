@@ -475,3 +475,30 @@ canvas {
 #loginLink {
   margin-top: 20px;
 }
+
+/* graphs */
+
+#graphHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(74, 78, 105);
+}
+
+#graphHeaderLeft {
+  margin-right: auto; 
+}
+
+#graphTitle {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 70px;
+  white-space: nowrap; /* Prevents text from breaking */
+}
+
+canvas#kineticEnergyGraph {
+  background-color: rgb(242, 233, 228);
+}

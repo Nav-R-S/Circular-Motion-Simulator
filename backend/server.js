@@ -1,12 +1,12 @@
 const express = require("express");
 const mysql = require("mysql2");
-const cors = require("cors"); // Add this line
+const cors = require("cors");
 const app = express();
 const port = 3000;
 const bcrypt = require("bcryptjs");
 
-// Enable CORS for all routes
-app.use(cors()); // This will allow all origins. You can configure it for specific origins too.
+
+app.use(cors());
 
 app.use(express.json()); // Middleware to parse JSON request bodies
 
@@ -33,6 +33,40 @@ app.post("/insertUser", async (req, res) => {
     }
 
     res.json({ message: "User details inserted", result });
+  });
+});
+
+// insert new sys details
+app.post("/insertSys", async (req, res) => {
+  const { sysID, sysData } = req.body;
+  const newDate = new Date().toISOString().split("T")[0];
+  const sysName = "System " + sysID;
+
+  const query = "INSERT INTO `Systems` (`systemID`, `systemName`, `dateCreated`, `systemData`) VALUES (?, ?, ?, ?)";
+
+  pool.execute(query, [sysID, sysName, newDate, sysData], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to insert user details" });
+    }
+
+    res.json({ message: "Sys details inserted", result });
+  });
+});
+
+// insert new user-sys relation
+app.post("/insertUserSysRelation", async (req, res) => {
+  const { userID, sysID } = req.body;
+
+  const query = "INSERT INTO `UserSystemRelation` (`userID`, `systemID`) VALUES (?, ?)";
+
+  pool.execute(query, [userID, sysID], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to insert user-sys relation details" });
+    }
+
+    res.json({ message: "user-sys relation details inserted", result });
   });
 });
 
@@ -81,14 +115,14 @@ app.post("/checkUserDetails", async (req, res) => {
     }
 
     if (result.length === 0) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found" }); //accessing someting that doesnt exist error
     }
 
     const storedHashedPassword = result[0].userPassword;
     const isPasswordValid = await bcrypt.compare(password, storedHashedPassword);
 
     if (!isPasswordValid) {
-      return res.status(400).json({ error: "Invalid password" });
+      return res.status(400).json({ error: "Invalid password" }); //bad request so bad parsing of data into request 
     }
 
     //console.log("Login successful" + result[0]);
@@ -112,6 +146,20 @@ app.get("/getNextUserID", (req, res) => {
     }
 
     res.json({ totUsers: result[0].totUsers });
+  });
+});
+
+// get the next system ID for sys creation
+app.get("/getNextSysID", (req, res) => {
+  const query = "SELECT COUNT(*) AS totSys FROM `Systems`";
+
+  pool.execute(query, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to count IDs" }); //this is an internal server error
+    }
+
+    res.json({ totSys: result[0].totSys });
   });
 });
 

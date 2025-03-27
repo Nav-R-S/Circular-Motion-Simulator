@@ -32,8 +32,8 @@ document.getElementById('loginForm').addEventListener('submit', async function (
       // checks if the response is successful
       if (data.message === "Login successful") {
 
-        localStorage.setItem("userID", data.userID); // Store the username (or any other necessary data)
-        localStorage.setItem("LoggedOn", true); // Store the login state
+        sessionStorage.setItem("userID", data.userID); // Store the username (or any other necessary data)
+        sessionStorage.setItem("LoggedOn", true); // Store the login state
 
         //window.location.href = "home.html"; // Redirect to the home page after successful login
       } else {

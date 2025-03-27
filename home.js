@@ -134,7 +134,19 @@ class SystemElement {
   }
 }
 
-sysList = []; //list of systems
+sysList = []; //list of systems used for when not logged in
+
+
+let LoggedOnData = sessionStorage.getItem("LoggedOn");
+let LoggedOn;
+
+if (LoggedOnData == null) {
+  LoggedOn = false;
+} else {
+  LoggedOn = true;
+}
+
+
 
 let createButton = document.getElementById("systemCreateButton");
 
@@ -151,28 +163,91 @@ createButton.onmouseleave = function () {
 createButton.onclick = function () {
   //add to sys table + get id
 
-  // async function getNewSysID(params) {
-  //   try { //get count of users to get the next user ID
-  //     const response = await fetch("http://localhost:3000/getNextSysID");
+  async function storeNewSys(sysData) {
+    try { //get count of users to get the next user ID
+      const response = await fetch("http://localhost:3000/getNextSysID");
 
-  //     if (response.ok) {
+      if (response.ok) {
 
-  //       const data = await response.json();
-  //       sysID = data.totUsers; //define userID as the total number of users
+        const data = await response.json();
+        let userID = sessionStorage.getItem("userID");
+        let sysID = data.totSys; //gets total num of systems as the sysID
+        //let initalSysConditionsJSON = JSON.stringify(sysData);
+        
+        try { // insert new sys into Systems table
+          const response = await fetch("http://localhost:3000/insertSys", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ sysID, sysData }), // Send username and password as JSON
+          });
 
-  //     } else {
-  //       const errorData = await response.json();
-  //       alert("Error: " + errorData.error);
-  //     }
-  //   } catch (error) {
-  //     alert("Error: " + error.message);
-  //   }
-  // }
+          if (response.ok) {
+            const data = await response.json();
+
+            let newSystem = new SystemElement(sysID); // creates new system div
+            newSystem.setup(); 
+
+          } else {
+            const errorData = await response.json();
+            alert("Error: " + errorData.error); // Show error message
+          }
+        } catch (error) {
+          alert("Error: " + error.message); // Handle any fetch errors
+        }
+
+
+        try { //insert new sys-user relationship into UserSystemRelation
+          const response = await fetch("http://localhost:3000/insertUserSysRelation", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userID, sysID }), // Send username and password as JSON
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            alert("Error: " + errorData.error); // Show error message
+          }
+        } catch (error) {
+          alert("Error: " + error.message); // Handle any fetch errors
+        }
+
+
+      } else {
+        const errorData = await response.json();
+        alert("Error: " + errorData.error);
+      }
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  }
+  
+  if (LoggedOn) { //store data
+    let sysData = {
+      id: this.id,
+      g: this.g,
+      scale: this.scale,
+      t: this.t,
+      t0: this.t0,
+      coefficientOfRestitution: this.coefficientOfRestitution,
+      particles: [],
+      points: [],
+      particlePointRelations: {},
+    };
+
+    let sysDataJSON = JSON.stringify(sysData)
+    storeNewSys(sysDataJSON);
+  } else { //dont store data
+    let newSystem = new SystemElement(sysList.length);
+    newSystem.setup();
+    sysList.push(sysList.length + 1);
+  };
   
 
-  let newSystem = new SystemElement(sysList.length);
-  newSystem.setup();
-  sysList.push(sysList.length + 1);
+  
 };
 
 let profileButton = document.getElementById("profileButton");
@@ -190,5 +265,11 @@ profileButton.onmouseleave = function () {
 profileButton.onclick = function () { //checks if logged in
   window.location.href = "login.html";
 };
+
+function loadUserSystems() {
+  let userID = sessionStorage.getItem("userID");
+  //select all the systems user has and create system for each.
+
+}
 
 

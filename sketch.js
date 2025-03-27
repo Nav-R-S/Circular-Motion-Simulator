@@ -264,6 +264,7 @@ class System {
           particle.angle = particle.initialAngle;
           particle.updatePosition();
         };
+        particle.keList = [];
       };
     };
 
@@ -780,8 +781,8 @@ class System {
       };
 
       let createGraphLinkFunction = () => {
-        sys.storeData();
-        //window.location.href = "graph.html";
+        sys.storeData(particleID);
+        window.location.href = "graph.html";
       }
 
       sys.createControlsScrollInput(
@@ -836,13 +837,46 @@ class System {
     };
   };
 
+  saveToDB() {
+    //if already in db then update
+    //otherwise create new entry
+
+
+    // try {
+    //   const response = await fetch("http://localhost:3000/getSystem", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({ username, password }), // Send username and password as JSON
+    //   });
+
+    //   const data = await response.json(); // Get the JSON data from the response
+
+    //   console.log("Response data:", data); // Log the response data
+
+    //   if (response.ok) {
+    //     // checks if the response is successful
+    //     if (data.message === "Login successful") {
+
+    //     } else {
+    //       alert("User does not exist or incorrect password");
+    //     }
+    //   } else {
+    //     alert("Error: " + data.error || "Something went wrong");
+    //   }
+    // } catch (error) {
+    //   alert("Error: " + error.message);
+    // }
+  }
+
   loadData() {
     
-    let getData = localStorage.getItem("sysData"); // gets data of system
+    let getData = sessionStorage.getItem("sysData"); // gets data of system
 
     if (getData) {
       let systemDetails = JSON.parse(getData);//parses json --> to be able to be used in js
-      localStorage.removeItem("sysData");//removes info for next use
+      sessionStorage.removeItem("sysData");//removes info for next use
 
       //load data for sys
       this.id = systemDetails.id
@@ -879,6 +913,7 @@ class System {
         //overlapedObjects is ommitted
         this.particles[i].inFreeFall = systemDetails.particles[i].inFreeFall;
         this.particles[i].freeFallInitialConditions = JSON.parse(systemDetails.particles[i].freeFallInitialConditions);
+        this.particles[i].keList = JSON.parse(systemDetails.particles[i].keList);
       };
 
       for (let i = 0; i < systemDetails.points.length; i++) {
@@ -915,7 +950,7 @@ class System {
     
   };
 
-  storeData() {
+  storeData(particleID) {
     let sysData = {
       id: this.id,
       g: this.g,
@@ -976,6 +1011,7 @@ class System {
         //overlapedObjects: particle.overlapedObjects,
         inFreeFall: particle.inFreeFall,
         freeFallInitialConditions: JSON.stringify(particle.freeFallInitialConditions),
+        keList: JSON.stringify(particle.keList)
       };
 
       if (particle.originPoint) {
@@ -1005,8 +1041,10 @@ class System {
       sysData.points.push(newPointData);
     };
 
-    localStorage.setItem("sysData", JSON.stringify(sysData));
-    
+    sessionStorage.setItem("sysData", JSON.stringify(sysData));
+
+    let particle = this.particles.find((particle) => particle.id == particleID);
+    sessionStorage.setItem("keListData", JSON.stringify(particle.keList));
   }
 
   createPoint(x, y) {
@@ -1158,10 +1196,7 @@ class Particle {
     this.inFreeFall = false;
     this.freeFallInitialConditions = {};
 
-    // let s0 = new Vector(this.pos.x, this.pos.y);
-    // let u = new Vector(20, this.velocity.y);
-    // let a = new Vector(0, this.sys.g);
-    // this.freeFallInitialConditions.push([s0, u, a, 0]);
+    this.keList = []
   }
 
   draw() {
@@ -1188,6 +1223,8 @@ class Particle {
 
     //old
     //this.sys.checkCollisions(this);
+
+    this.UpdateKEList();
   }
 
   updateVelocityRod() {
@@ -1351,13 +1388,13 @@ class Particle {
     let a = latestInitialConditions[2];
     
 
-    console.log("inituial conditions for proj mot  {");
-    console.log(s0.x, s0.y, "s0");
-    console.log(u.x, u.y, "u");
-    console.log(a.x, a.y, "a");
-    console.log(t0, "t0");
-    console.log(t, "t");
-    console.log("} (end)");
+    // console.log("inituial conditions for proj mot  {");
+    // console.log(s0.x, s0.y, "s0");
+    // console.log(u.x, u.y, "u");
+    // console.log(a.x, a.y, "a");
+    // console.log(t0, "t0");
+    // console.log(t, "t");
+    // console.log("} (end)");
 
     s = (s0.getAddition(u.getScale(t - t0)).getAddition(a.getScale(0.5 * (t - t0) ** 2))).getScale(this.sys.scale);
     v = (u.getAddition(a.getScale(t - t0))); //.getScale(this.sys.scale);
@@ -1420,7 +1457,7 @@ class Particle {
 
         if (tension > 0) {
 
-          console.log("STRING TENSE AGAIN :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+          //console.log("STRING TENSE AGAIN :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
           this.inFreeFall = false;
           this.initialAngle = this.getAngleFromPos();
           
@@ -1495,11 +1532,11 @@ class Particle {
         
         const a = new Vector(0, this.sys.g); //dont * -1 as the y axis is flipped in the coordinate system
         let lst = [s0, u, a];
-        console.log("INITAL FREE FALL CONDITIONS =======================================================>>");
-        console.log(s0.x, s0.y, "s0");
-        console.log(u.x, u.y, "u");
-        console.log(a.x, a.y, "a");
-        console.log("===========================================================================>>");
+        // console.log("INITAL FREE FALL CONDITIONS =======================================================>>");
+        // console.log(s0.x, s0.y, "s0");
+        // console.log(u.x, u.y, "u");
+        // console.log(a.x, a.y, "a");
+        // console.log("===========================================================================>>");
 
         //console.log(lst[1].x, lst[1].y, "lst uuuu");
 
@@ -1602,13 +1639,16 @@ class Particle {
     this.pos.y = this.y - this.originPoint.y;
     //gets position vector from originPoint set as the origin
 
-    //this.initialAngle = -1 * this.pos.getAngle() + Math.PI / 2;
-    //console.log(this.pos.getAngle(), "initial angle fro, getAngle()");
     console.log(
       -1 * this.pos.getAngle() + Math.PI / 2,
       "initial angle SETTTTT"
     );
     return -1 * this.pos.getAngle() + Math.PI / 2;
+  }
+
+  UpdateKEList() {
+    let ke = 0.5 * this.mass * this.velocity.getMagnitude();
+    this.keList.push([this.sys.t, ke])
   }
 };
 
