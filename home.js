@@ -35,6 +35,7 @@ class SystemElement {
     });
     
     systemName.onclick = () => {
+      sessionStorage.setItem("systemID", this.id)
       window.location.href = "index.html";
       // get sys id
 
@@ -163,7 +164,7 @@ createButton.onmouseleave = function () {
 createButton.onclick = function () {
   //add to sys table + get id
 
-  async function storeNewSys(sysData) {
+  async function storeNewSys() {
     try { //get count of users to get the next user ID
       const response = await fetch("http://localhost:3000/getNextSysID");
 
@@ -173,6 +174,23 @@ createButton.onclick = function () {
         let userID = sessionStorage.getItem("userID");
         let sysID = data.totSys; //gets total num of systems as the sysID
         //let initalSysConditionsJSON = JSON.stringify(sysData);
+
+        let sysData = {
+          id: sysID,
+          g: 9.81,
+          scale: 100,
+          t: 0,
+          t0: 0,
+          coefficientOfRestitution: 1,
+          particles: [],
+          points: [],
+          particlePointRelations: {},
+        };
+
+        // let sysdata2 = {a:1}
+        // let sysDataJSON = JSON.stringify(sysData);
+        // console.log(sysDataJSON)
+        
         
         try { // insert new sys into Systems table
           const response = await fetch("http://localhost:3000/insertSys", {
@@ -180,11 +198,11 @@ createButton.onclick = function () {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ sysID, sysData }), // Send username and password as JSON
+            body: JSON.stringify({ sysID, sysData: JSON.stringify(sysData) }),
           });
 
           if (response.ok) {
-            const data = await response.json();
+            const data = await response.json();// working mesg
 
             let newSystem = new SystemElement(sysID); // creates new system div
             newSystem.setup(); 
@@ -225,21 +243,9 @@ createButton.onclick = function () {
     }
   }
   
-  if (LoggedOn) { //store data
-    let sysData = {
-      id: this.id,
-      g: this.g,
-      scale: this.scale,
-      t: this.t,
-      t0: this.t0,
-      coefficientOfRestitution: this.coefficientOfRestitution,
-      particles: [],
-      points: [],
-      particlePointRelations: {},
-    };
-
-    let sysDataJSON = JSON.stringify(sysData)
-    storeNewSys(sysDataJSON);
+  if (LoggedOn) { //store data (base vals)
+    
+    storeNewSys();
   } else { //dont store data
     let newSystem = new SystemElement(sysList.length);
     newSystem.setup();
@@ -266,10 +272,44 @@ profileButton.onclick = function () { //checks if logged in
   window.location.href = "login.html";
 };
 
-function loadUserSystems() {
+async function loadUserSystems() {
   let userID = sessionStorage.getItem("userID");
   //select all the systems user has and create system for each.
 
+  try {
+    const response = await fetch("http://localhost:3000/selectUserSystems", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userID }), // Send username and password as JSON
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      let result = data.result;
+      console.log(result);
+
+      for (let system of result) {
+        let newSystem = new SystemElement(system.systemID);
+        newSystem.setup();
+
+        let systemElement = document.getElementById("system-" + system.systemID);
+        let systemName = systemElement.children[0];
+        systemName.textContent = system.systemName;
+      }
+
+
+    } else {
+      const errorData = await response.json();
+      alert("Error: " + errorData.error); // Show error message
+    }
+  } catch (error) {
+    alert("Error: " + error.message); // Handle any fetch errors
+  }
+
 }
 
-
+if (LoggedOn) {
+  loadUserSystems();
+}

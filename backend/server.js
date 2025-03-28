@@ -135,6 +135,55 @@ app.post("/checkUserDetails", async (req, res) => {
   });
 });
 
+//gets systems of user
+app.post("/selectUserSystems", async (req, res) => {
+  const { userID } = req.body;
+
+  const query = `SELECT s.* FROM UserSystemRelation us JOIN Systems s ON us.systemID = s.systemID WHERE us.userID = ?`;
+
+  pool.execute(query, [userID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select user" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "User not found" }); //accessing someting that doesnt exist error
+    }
+
+    //console.log("Login successful" + result[0]);
+
+    res.json({
+      message: "Login successful",
+      result: result,
+    });
+  });
+});
+
+app.post("/selectSystem", async (req, res) => {
+  const { sysID } = req.body;
+
+  const query = "SELECT * FROM `Systems` WHERE `systemID` = ?";
+
+  pool.execute(query, [sysID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select Sys" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Sys not found" }); //accessing someting that doesnt exist error
+    }
+
+    //console.log("Login successful" + result[0]);
+
+    res.json({
+      system: result
+    });
+  });
+});
+
+
 // get the next user ID for user registration
 app.get("/getNextUserID", (req, res) => {
   const query = "SELECT COUNT(*) AS totUsers FROM `UserDetails`";

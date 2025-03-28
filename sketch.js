@@ -835,6 +835,161 @@ class System {
       let controls = childList[1];
       controls.classList.toggle("showControls");
     };
+
+    async function getParticleID() {
+
+      try {
+        const response = await fetch("http://localhost:3000/getNextParticleID");
+
+        if (response.ok) {
+          const data = await response.json();
+
+          particleID = data.totParticles; //define userID as the total number of users
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error);
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+      
+    }
+
+    async function addParticle(particleID) {
+      //save generic data
+      //get particle id via count
+      //insert particle table
+      //insert particle-sys relation table
+
+
+      
+
+      try {
+        const response = await fetch("http://localhost:3000/insertParticle", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sysID }), // Send username and password as JSON
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          let result = data.system;
+
+          
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error); // Show error message
+        }
+      } catch (error) {
+        alert("Error: " + error.message); // Handle any fetch errors
+      };
+    };
+
+
+  };
+
+
+
+  loadFromDB() {
+    let sysID = sessionStorage.getItem("systemID");
+    getSysData(sysID, this);
+
+    async function getSysData(sysID, sys) {
+      try {
+        const response = await fetch("http://localhost:3000/selectSystem", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sysID }), // Send username and password as JSON
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          let result = data.system;
+
+          console.log(result[0].systemData, "hello");
+
+          let sysData = JSON.parse(result[0].systemData);
+          console.log(sysData)
+          //load data for sys
+          sys.id = sysData.id;
+          sys.g = sysData.g;
+          sys.scale = sysData.scale;
+          sys.t = sysData.t;
+          sys.t0 = sysData.t0;
+          sys.coefficientOfRestitution = sysData.coefficientOfRestitution;
+
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error); // Show error message
+        }
+      } catch (error) {
+        alert("Error: " + error.message); // Handle any fetch errors
+      }
+    }
+
+    async function getParticles(sysID, sys) {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/selectSystemParticles",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ sysID }), // Send username and password as JSON
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          let result = data.result;
+
+          
+          
+          if (result.length != 0) {
+            //load data for particles
+            for (let i = 0; i < result.length; i++) {
+              let particleData = JSON.parse(result[i].particleData);
+              sys.createParticle();
+            
+              //assign stored values
+              sys.particles[i].id = particleData.id;
+              //sys is ommitted
+              sys.particles[i].radius = particleData.radius;
+              sys.particles[i].pos = new Vector(particleData.pos.x, particleData.pos.y); //{ x: particle.pos.x, y: particle.pos.y }, //Vector obj
+              sys.particles[i].x = particleData.x;
+              sys.particles[i].y = particleData.y;
+              sys.particles[i].angle = particleData.angle;
+              sys.particles[i].velocity = new Vector(particleData.velocity.x, particleData.velocity.y) 
+              sys.particles[i].mass = particleData.mass;
+              //drag is ommitted
+              //originPoint is ommitted
+              sys.particles[i].lineDist = particleData.lineDist;
+              sys.particles[i].initialVel = particleData.initialVel;
+              sys.particles[i].initialAngle = particleData.initialAngle;
+              sys.particles[i].colour = particleData.colour;
+              //lastColl is ommitted
+              sys.particles[i].prevVelocity = new Vector(particleData.prevVelocity.x, particleData.prevVelocity.y)
+              sys.particles[i].updated = particleData.updated;
+              sys.particles[i].initialConditions = JSON.parse(particleData.initialConditions);
+              //overlapedObjects is ommitted
+              sys.particles[i].inFreeFall = particleData.inFreeFall;
+              sys.particles[i].freeFallInitialConditions = JSON.parse(particleData.freeFallInitialConditions);
+              sys.particles[i].keList = JSON.parse(particleData.keList);
+            };
+          }
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error); // Show error message
+        }
+      } catch (error) {
+        alert("Error: " + error.message); // Handle any fetch errors
+      }
+    }
   };
 
   saveToDB() {
@@ -1655,7 +1810,11 @@ class Particle {
 sys1 = new System(1)
 sysList.push(sys1)
 sys1.setup();
+if (sessionStorage.getItem("LoggedOn")) {
+  sys1.loadFromDB();
+}
 sys1.loadData();
+
 
 
 
