@@ -70,6 +70,22 @@ app.post("/insertUserSysRelation", async (req, res) => {
   });
 });
 
+// insert new user-sys relation
+app.post("/insertParticle", async (req, res) => {
+  const { particleID, particleData } = req.body;
+
+  const query = "INSERT INTO `Particles` (`particleID`, `particleData`) VALUES (?, ?)";
+
+  pool.execute(query, [particleID, particleData], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to insert particle details" });
+    }
+
+    res.json({ message: "particle details inserted", result });
+  });
+});
+
 // checks if username exists
 app.post("/checkUsernameExists", (req, res) => {
   const { username } = req.body;
@@ -149,6 +165,57 @@ app.post("/selectUserSystems", async (req, res) => {
 
     if (result.length === 0) {
       return res.status(404).json({ error: "User not found" }); //accessing someting that doesnt exist error
+    }
+
+    //console.log("Login successful" + result[0]);
+
+    res.json({
+      message: "Login successful",
+      result: result,
+    });
+  });
+});
+
+
+//gets particles of a system
+app.post("/selectSystemParticles", async (req, res) => {
+  const { sysID } = req.body;
+
+  const query = `SELECT p.* FROM SystemParticleRelation sp JOIN Particles p ON sp.particleID = p.particleID WHERE sp.systemID = ?`;
+
+  pool.execute(query, [sysID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select particle" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "particle not found" }); //accessing someting that doesnt exist error
+    }
+
+    //console.log("Login successful" + result[0]);
+
+    res.json({
+      message: "Login successful",
+      result: result,
+    });
+  });
+});
+
+//gets points of a system
+app.post("/selectSystemPoints", async (req, res) => {
+  const { sysID } = req.body;
+
+  const query = `SELECT p.* FROM SystemPointRelation sp JOIN Particles p ON sp.pointID = p.pointID WHERE sp.systemID = ?`;
+
+  pool.execute(query, [sysID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select particle" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "particle not found" }); //accessing someting that doesnt exist error
     }
 
     //console.log("Login successful" + result[0]);

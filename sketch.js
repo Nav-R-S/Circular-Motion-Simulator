@@ -855,13 +855,40 @@ class System {
       
     }
 
-    async function addParticle(particleID) {
+    async function addParticle(particleID, sys) {
       //save generic data
       //get particle id via count
       //insert particle table
       //insert particle-sys relation table
 
 
+      let particle = sys.particles[particleID]
+
+      let particleData = {
+        id: particleID,
+        // sys: particle.sys,
+        radius: particle.radius,
+        pos: { x: particle.pos.x, y: particle.pos.x }, //Vector obj
+        x: particle.x,
+        y: particle.y,
+        angle: particle.angle,
+        velocity: { x: particle.velocity.x, y: particle.velocity.y }, //Vector obj
+        mass: particle.mass,
+        //drag: particle.drag,
+        //originPoint: particle.originPoint,
+        lineDist: particle.lineDist,
+        initialVel: particle.initialVel,
+        initialAngle: particle.initialAngle,
+        colour: particle.colour,
+        // lastColl: particle.lastColl,
+        prevVelocity: { x: particle.prevVelocity.x, y: particle.prevVelocity.y }, //Vector obj
+        updated: particle.updated,
+        initialConditions: JSON.stringify(particle.initialConditions),
+        //overlapedObjects: particle.overlapedObjects,
+        inFreeFall: particle.inFreeFall,
+        freeFallInitialConditions: JSON.stringify(particle.freeFallInitialConditions),
+        keList: JSON.stringify(particle.keList)
+      };
       
 
       try {
@@ -870,7 +897,7 @@ class System {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ sysID }), // Send username and password as JSON
+          body: JSON.stringify({ particleID, particleData }), 
         });
 
         if (response.ok) {
@@ -893,6 +920,12 @@ class System {
 
 
   loadFromDB() {
+    //get particle data
+    //get point data
+    //get relations for particle-point
+    //set up relationship by for each entry in db --> setting val of particle.originpoint and point.particle
+
+
     let sysID = sessionStorage.getItem("systemID");
     getSysData(sysID, this);
 
@@ -932,7 +965,7 @@ class System {
     }
 
     async function getParticles(sysID, sys) {
-      try {
+      try {//gets particles from particle list where Systems.sysID = SystemParticleRelation.sysID then get the particleID from this
         const response = await fetch(
           "http://localhost:3000/selectSystemParticles",
           {
@@ -948,8 +981,6 @@ class System {
           const data = await response.json();
           let result = data.result;
 
-          
-          
           if (result.length != 0) {
             //load data for particles
             for (let i = 0; i < result.length; i++) {
@@ -990,6 +1021,59 @@ class System {
         alert("Error: " + error.message); // Handle any fetch errors
       }
     }
+
+    async function getPoints(sysID, sys) { //retrieves and sets data for points
+      try {
+        const response = await fetch(
+          "http://localhost:3000/selectSystemPoints",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ sysID }), // Send username and password as JSON
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          let result = data.result;
+
+          if (result.length != 0) {
+            //load data for points
+            for (let i = 0; i < result.length; i++) {
+              let pointData = JSON.parse(result[i].pointData);
+            
+              sys.createPoint();
+
+              //assign stored values
+              sys.points[i].id = pointData.id;
+              //sys is ommitted
+              sys.points[i].x = pointData.x;
+              sys.points[i].y = pointData.y;
+              sys.points[i].mass = pointData.mass;
+              sys.points[i].speed = pointData.speed;
+              sys.points[i].radius = pointData.radius;
+              sys.points[i].endX = pointData.endX;
+              sys.points[i].endY = pointData.endY;
+              sys.points[i].drag = pointData.drag;
+              sys.points[i].lineDrag = pointData.lineDrag;
+              sys.points[i].lineLocked = pointData.lineLocked;
+              //particle is ommitted
+            };
+          }
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error); // Show error message
+        }
+      } catch (error) {
+        alert("Error: " + error.message); // Handle any fetch errors
+      }
+    }
+
+    //check relations
+    //select all relations for a given system and returns array of {particleID: x, pointID: y} objects
+    //update query to update respective entries
   };
 
   saveToDB() {
