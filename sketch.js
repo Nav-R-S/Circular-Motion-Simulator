@@ -158,6 +158,10 @@ class System {
       };
     };
 
+    saveButton.onclick = () => {
+      this.saveToDB();
+    };
+
     homeButton.onmousedown = function () {
       homeButton.src = "images/homeColouredPressed.png";
       homeButton.classList.toggle("toolbarButtonPressed");
@@ -282,21 +286,6 @@ class System {
         profileButton.classList.toggle("toolbarButtonPressed");
       }
     };
-
-    // binButton.onmousedown = function () {
-    //   binButton.src = "images/trashColouredPressed.png";
-    //   binButton.classList.toggle("toolbarButtonPressed");
-    // };
-    // binButton.onmouseup = function () {
-    //   binButton.src = "images/trashColoured.png";
-    //   binButton.classList.toggle("toolbarButtonPressed");
-    // };
-    // binButton.onmouseleave = function () {
-    //   binButton.src = "images/trashColoured.png";
-    //   if (binButton.classList.contains("toolbarButtonPressed")) {
-    //     binButton.classList.toggle("toolbarButtonPressed");
-    //   }
-    // };
 
     binButton.onclick = function () {
       
@@ -781,7 +770,8 @@ class System {
       };
 
       let createGraphLinkFunction = () => {
-        sys.storeData(particleID);
+        let particle = sys.particles[particleID];
+        sys.storeData(particle); //passes particle class
         window.location.href = "graph.html";
       }
 
@@ -836,7 +826,12 @@ class System {
       controls.classList.toggle("showControls");
     };
 
-    async function getParticleID() {
+    if (sessionStorage.getItem("LoggedOn")) {
+      getParticleID(this.particles[particleID], this);
+    }
+    // addParticle(globalParticalID, this);
+
+    async function getParticleID(particle, sys) { //need particle id when creating new particle to store in global table (Particles)
 
       try {
         const response = await fetch("http://localhost:3000/getNextParticleID");
@@ -844,7 +839,12 @@ class System {
         if (response.ok) {
           const data = await response.json();
 
-          particleID = data.totParticles; //define userID as the total number of users
+          let globalParticleID = data.totParticles; //ids from various systems stored in db (globally)
+          console.log(globalParticleID, "globalParticleID")
+
+          particle.id = globalParticleID; //sets the id to match db
+
+          addParticle(globalParticleID, particle, sys);
         } else {
           const errorData = await response.json();
           alert("Error: " + errorData.error);
@@ -855,14 +855,17 @@ class System {
       
     }
 
-    async function addParticle(particleID, sys) {
+    
+    async function addParticle(particleID, particle, sys) {
       //save generic data
       //get particle id via count
       //insert particle table
       //insert particle-sys relation table
 
-
-      let particle = sys.particles[particleID]
+      //let particle = sys.particles.find((particle) => particle.id === particleID);
+      //let particle = sys.particles[particleID]
+      console.log(particle)
+      console.log(sys, "sys")
 
       let particleData = {
         id: particleID,
@@ -890,6 +893,8 @@ class System {
         keList: JSON.stringify(particle.keList)
       };
       
+      let sysID = sys.id;
+
 
       try {
         const response = await fetch("http://localhost:3000/insertParticle", {
@@ -897,12 +902,38 @@ class System {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ particleID, particleData }), 
+          body: JSON.stringify({ particleID, particleData: JSON.stringify(particleData) }),
         });
 
         if (response.ok) {
           const data = await response.json();
           let result = data.system;
+
+          //create relation
+          try {
+            const response = await fetch("http://localhost:3000/insertSysParticleRelation", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ sysID, particleID }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              let result = data.system;
+
+              
+
+              
+              
+            } else {
+              const errorData = await response.json();
+              alert("Error: " + errorData.error); // Show error message
+            }
+          } catch (error) {
+            alert("Error: " + error.message); // Handle any fetch errors
+          };
 
           
         } else {
@@ -913,7 +944,6 @@ class System {
         alert("Error: " + error.message); // Handle any fetch errors
       };
     };
-
 
   };
 
@@ -928,6 +958,11 @@ class System {
 
     let sysID = sessionStorage.getItem("systemID");
     getSysData(sysID, this);
+    getParticles(sysID, this);
+
+
+    getPoints(sysID, this);
+    getParticlePointRel(sysID, this);
 
     async function getSysData(sysID, sys) {
       try {
@@ -980,6 +1015,8 @@ class System {
         if (response.ok) {
           const data = await response.json();
           let result = data.result;
+
+          console.log(result);
 
           if (result.length != 0) {
             //load data for particles
@@ -1074,39 +1111,249 @@ class System {
     //check relations
     //select all relations for a given system and returns array of {particleID: x, pointID: y} objects
     //update query to update respective entries
+
+    async function getParticlePointRel(sysID, sys) {
+      try {
+        const response = await fetch("http://localhost:3000/selectParticlePointRelations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sysID }), // Send username and password as JSON
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          let result = data.result;
+
+          if (result.length != 0) {
+            //load data for points
+            for (let i = 0; i < result.length; i++) {
+              let relationData = JSON.parse(result[i].relationData);
+              let particleID = relationData.particleID;
+              let pointID = relationData.pointID;
+
+              let particle = sys.particles.find((particle) => particle.id === particleID);
+              let point = sys.points.find(point => point.id === pointID);
+
+              particle.originPoint = point;
+              point.particle = particle;
+            }
+          }
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error); // Show error message
+        };
+      } catch (error) {
+        alert("Error: " + error.message); // Handle any fetch errors
+      };
+    };
   };
 
   saveToDB() {
     //if already in db then update
     //otherwise create new entry
 
+    updateSysData(this);
 
-    // try {
-    //   const response = await fetch("http://localhost:3000/getSystem", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({ username, password }), // Send username and password as JSON
-    //   });
+    for (let particle of this.particles) {
+      updateParticleData(particle);
+    }
 
-    //   const data = await response.json(); // Get the JSON data from the response
+    for (let point of this.points) {
+      updatePointData(point);
+    }
 
-    //   console.log("Response data:", data); // Log the response data
+    //check all previous point particle conenctions exist
+    checkConnections(this);
 
-    //   if (response.ok) {
-    //     // checks if the response is successful
-    //     if (data.message === "Login successful") {
+    async function checkConnections(sys) {
+      let sysID = sys.id;
 
-    //     } else {
-    //       alert("User does not exist or incorrect password");
-    //     }
-    //   } else {
-    //     alert("Error: " + data.error || "Something went wrong");
-    //   }
-    // } catch (error) {
-    //   alert("Error: " + error.message);
-    // }
+      //delete all previous conenctions and establish new ones
+      try {
+        const response = await fetch("http://localhost:3000/deleteParticlePointRelations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sysID }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+
+          console.log("particle point relations delted")
+          //create new cons
+
+          for (let particle of sys.particles) {
+            if (particle.originPoint) {
+              let particleID = particle.id
+              let pointID = particle.originPoint.id
+
+              console.log(particleID, pointID, "part anmd point id")
+
+              try {
+                const response = await fetch("http://localhost:3000/insertParticlePointRelations", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ sysID, particleID, pointID }), 
+                });
+
+                if (!response.ok) {
+
+                  const errorData = await response.json();
+                  alert("Error: " + errorData.error); // Show error message
+                };
+              } catch (error) {
+                alert("Error: " + error.message); // Handle any fetch errors
+              };
+            }
+          }
+
+
+        } else {
+          alert("Error: " + data.error || "Something went wrong");
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+      
+    }
+
+    async function updateSysData(sys) {
+
+      let sysID = sys.id;
+
+      let sysData = {
+        id: sys.id,
+        g: sys.g,
+        scale: sys.scale,
+        t: sys.t,
+        t0: sys.t0,
+        coefficientOfRestitution: sys.coefficientOfRestitution,
+        particles: [],
+        points: [],
+        particlePointRelations: {}
+      };
+      
+      try {
+        const response = await fetch("http://localhost:3000/updateSysData", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sysData: JSON.stringify(sysData), sysID }), 
+        });
+
+        const data = await response.json(); 
+        if (response.ok) {
+          
+
+        } else {
+          alert("Error: " + data.error || "Something went wrong");
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+
+    async function updateParticleData(particle) {
+
+      let particleID = particle.id;
+
+      let particleData = { // stores particle data (ommitted fields commented)
+        id: particle.id,
+        // sys: particle.sys,
+        radius: particle.radius,
+        pos: { x: particle.pos.x, y: particle.pos.y }, //Vector obj
+        x: particle.x,
+        y: particle.y,
+        angle: particle.angle,
+        velocity: { x: particle.velocity.x, y: particle.velocity.y }, //Vector obj
+        mass: particle.mass,
+        //drag: particle.drag,
+        //originPoint: particle.originPoint,
+        lineDist: particle.lineDist,
+        initialVel: particle.initialVel,
+        initialAngle: particle.initialAngle,
+        colour: particle.colour,
+        // lastColl: particle.lastColl,
+        prevVelocity: { x: particle.prevVelocity.x, y: particle.prevVelocity.y }, //Vector obj
+        updated: particle.updated,
+        initialConditions: JSON.stringify(particle.initialConditions),
+        //overlapedObjects: particle.overlapedObjects,
+        inFreeFall: particle.inFreeFall,
+        freeFallInitialConditions: JSON.stringify(particle.freeFallInitialConditions),
+        keList: JSON.stringify(particle.keList)
+      };
+
+      try {
+        const response = await fetch("http://localhost:3000/updateParticleData", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ particleData: JSON.stringify(particleData), particleID }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          
+        } else {
+          alert("Error: " + data.error || "Something went wrong");
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+
+    async function updatePointData(point) {
+
+      let pointID = point.id;
+
+      let pointData = {
+        id: point.id,
+        //sys: point.sys,
+        x: point.x,
+        y: point.y,
+        mass: point.mass,
+        speed: point.speed,
+        radius: point.radius,
+        endX: point.endX,
+        endY: point.endY,
+        drag: point.drag,
+        lineDrag: point.lineDrag,
+        lineLocked: point.lineLocked,
+        //particle: point.particle
+      };
+
+      try {
+        const response = await fetch(
+          "http://localhost:3000/updatePointData",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ pointData: JSON.stringify(pointData), pointID }),
+          }
+        );
+
+        const data = await response.json();
+        if (response.ok) {
+          
+        } else {
+          alert("Error: " + data.error || "Something went wrong");
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+
+    
   }
 
   loadData() {
@@ -1189,7 +1436,7 @@ class System {
     
   };
 
-  storeData(particleID) {
+  storeData(targetParticle) {
     let sysData = {
       id: this.id,
       g: this.g,
@@ -1281,8 +1528,9 @@ class System {
     };
 
     sessionStorage.setItem("sysData", JSON.stringify(sysData));
-
+    let particleID = targetParticle.id;
     let particle = this.particles.find((particle) => particle.id == particleID);
+    
     sessionStorage.setItem("keListData", JSON.stringify(particle.keList));
   }
 
@@ -1310,7 +1558,7 @@ class System {
       let pointElementList = pointContent.children;
       for (let i = 0; i < pointElementList.length; i++) {
         pointElementList[i].classList.toggle("showObject");
-      };
+      }
     };
     //toggles visibility of the point elements when the heading is clicked
 
@@ -1325,7 +1573,7 @@ class System {
       pointElement.appendChild(controlsContainer);
 
       sys.createControlsCheckbox(controlsContainer, "Collisions");
-    };
+    }
 
     pointNameDisplay.onclick = function () {
       let pointElement = this.parentElement;
@@ -1333,6 +1581,104 @@ class System {
       let controls = childList[1];
       controls.classList.toggle("showControls");
     };
+
+    if (sessionStorage.getItem("LoggedOn")) {
+      getPointID(this.points[pointID], this);
+    }
+  
+    async function getPointID(point, sys) {
+      //need Point id when creating new Point to store in global table (Points)
+
+      try {
+        const response = await fetch("http://localhost:3000/getNextPointID");
+
+        if (response.ok) {
+          const data = await response.json();
+
+          let globalPointID = data.totPoints; //ids from various systems stored in db (globally)
+          console.log(globalPointID, "globalPointID");
+
+          point.id = globalPointID; //sets the id to match db
+
+          addPoint(globalPointID, point, sys);
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error);
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+
+    async function addPoint(pointID, point, sys) {
+      console.log(point);
+      console.log(sys, "sys");
+
+      let pointData = {
+        id: pointID,
+        //sys: point.sys,
+        x: point.x,
+        y: point.y,
+        mass: point.mass,
+        speed: point.speed,
+        radius: point.radius,
+        endX: point.endX,
+        endY: point.endY,
+        drag: point.drag,
+        lineDrag: point.lineDrag,
+        lineLocked: point.lineLocked,
+        //particle: point.particle
+      };
+
+      let sysID = sys.id;
+
+      try {
+        const response = await fetch("http://localhost:3000/insertPoint", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            pointID,
+            pointData: JSON.stringify(pointData),
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          let result = data.system;
+
+          //create relation
+          try {
+            const response = await fetch(
+              "http://localhost:3000/insertSysPointRelation",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ sysID, pointID }),
+              }
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              let result = data.system;
+            } else {
+              const errorData = await response.json();
+              alert("Error: " + errorData.error); // Show error message
+            }
+          } catch (error) {
+            alert("Error: " + error.message); // Handle any fetch errors
+          }
+        } else {
+          const errorData = await response.json();
+          alert("Error: " + errorData.error); // Show error message
+        }
+      } catch (error) {
+        alert("Error: " + error.message); // Handle any fetch errors
+      }
+    }
   };
 
   randColour() {
@@ -1573,27 +1919,27 @@ class Particle {
     //let latestInitialConditions = this.freeFallInitialConditions.peek();
 
 
-    console.log("lates inituial conditions for proj mot:", latestInitialConditions);
+    //console.log("lates inituial conditions for proj mot:", latestInitialConditions);
     let s0 = latestInitialConditions[0];
     let u = latestInitialConditions[1];
     let a = latestInitialConditions[2];
     //let t0 = latestInitialConditions[3];
 
-    console.log("inituial conditions for proj mot  {");
-    console.log(s0.x, s0.y, "s0");
-    console.log(u.x, u.y, "u");
-    console.log(a.x, a.y, "a");
-    console.log(t0, "t0");
-    console.log(t, "t");
-    console.log("} (end)");
+    // console.log("inituial conditions for proj mot  {");
+    // console.log(s0.x, s0.y, "s0");
+    // console.log(u.x, u.y, "u");
+    // console.log(a.x, a.y, "a");
+    // console.log(t0, "t0");
+    // console.log(t, "t");
+    // console.log("} (end)");
 
     s = s0
       .getAddition(u.getScale(t - t0))
       .getAddition(a.getScale(0.5 * (t - t0) ** 2));
     v = u.getAddition(a.getScale(t - t0));
 
-    console.log(s.x, s.y, "s");
-    console.log(v.x, v.y, "v");
+    // console.log(s.x, s.y, "s");
+    // console.log(v.x, v.y, "v");
 
     this.pos.x = s.x;
     this.pos.y = s.y;
@@ -1638,10 +1984,10 @@ class Particle {
     s = (s0.getAddition(u.getScale(t - t0)).getAddition(a.getScale(0.5 * (t - t0) ** 2))).getScale(this.sys.scale);
     v = (u.getAddition(a.getScale(t - t0))); //.getScale(this.sys.scale);
 
-    console.log(s.x, s.y, "s FINAL");
-    console.log(v.x, v.y, "v FINAL");
-    this.pos.x = s.x;
-    this.pos.y = s.y;
+    // console.log(s.x, s.y, "s FINAL");
+    // console.log(v.x, v.y, "v FINAL");
+    // this.pos.x = s.x;
+    // this.pos.y = s.y;
     
     this.x = this.originPoint.x + this.pos.x;
     this.y = this.originPoint.y + this.pos.y;
@@ -1673,9 +2019,9 @@ class Particle {
     //need to get tension
 
     let tension = this.getTension();
-    console.log(tension, "tensionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
-    console.log(this.inFreeFall, "inFreeFall");
-    console.log(this.sys.t, "time");
+    // console.log(tension, "tensionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
+    // console.log(this.inFreeFall, "inFreeFall");
+    // console.log(this.sys.t, "time");
     const isTangent = this.velocity.getDotProduct(this.pos)
 
     if (this.inFreeFall) {
@@ -1891,13 +2237,22 @@ class Particle {
   }
 };
 
+
+//creates sys
+
 sys1 = new System(1)
 sysList.push(sys1)
 sys1.setup();
-if (sessionStorage.getItem("LoggedOn")) {
-  sys1.loadFromDB();
+
+if (sessionStorage.getItem("sysID")) {
+  sys1.loadData();
+} else {
+  if (sessionStorage.getItem("LoggedOn")) {
+    sys1.loadFromDB();
+  }
 }
-sys1.loadData();
+
+
 
 
 

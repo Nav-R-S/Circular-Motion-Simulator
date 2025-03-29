@@ -70,7 +70,58 @@ app.post("/insertUserSysRelation", async (req, res) => {
   });
 });
 
-// insert new user-sys relation
+// insert new sys-particle relation
+app.post("/insertSysParticleRelation", async (req, res) => {
+  const { sysID, particleID } = req.body;
+
+  const query = "INSERT INTO `SystemParticleRelation` (`systemID`, `particleID`) VALUES (?, ?)";
+
+  pool.execute(query, [sysID, particleID], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to insert sys-particle relation details" });
+    }
+
+    res.json({ message: "sys-particle relation details inserted", result });
+  });
+});
+
+// insert new sys-point relation
+app.post("/insertSysPointRelation", async (req, res) => {
+  const { sysID, pointID } = req.body;
+
+  const query = "INSERT INTO `SystemPointRelation` (`systemID`, `pointID`) VALUES (?, ?)";
+
+  pool.execute(query, [sysID, pointID], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to insert sys-point relation details" });
+    }
+
+    res.json({ message: "sys-point relation details inserted", result });
+  });
+});
+
+// insert new particle-point relation
+app.post("/insertParticlePointRelations", async (req, res) => {
+  const { sysID, particleID, pointID } = req.body;
+
+  const query =
+    "INSERT INTO `SystemParticlePointConnections` (`systemID`, `particleID`, `pointID`) VALUES (?, ?, ?)";
+
+  pool.execute(query, [sysID, particleID, pointID], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res
+        .status(500)
+        .json({ error: "Failed to insert sys-particle-point relation details" });
+    }
+
+    res.json({ message: "particle-point relation details inserted", result });
+  });
+});
+
+// insert new particle
 app.post("/insertParticle", async (req, res) => {
   const { particleID, particleData } = req.body;
 
@@ -85,6 +136,24 @@ app.post("/insertParticle", async (req, res) => {
     res.json({ message: "particle details inserted", result });
   });
 });
+
+// insert new point
+app.post("/insertPoint", async (req, res) => {
+  const { pointID, pointData } = req.body;
+
+  const query = "INSERT INTO `Points` (`pointID`, `pointData`) VALUES (?, ?)";
+
+  pool.execute(query, [pointID, pointData], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to insert point details" });
+    }
+
+    res.json({ message: "point details inserted", result });
+  });
+});
+
+
 
 // checks if username exists
 app.post("/checkUsernameExists", (req, res) => {
@@ -167,10 +236,8 @@ app.post("/selectUserSystems", async (req, res) => {
       return res.status(404).json({ error: "User not found" }); //accessing someting that doesnt exist error
     }
 
-    //console.log("Login successful" + result[0]);
-
     res.json({
-      message: "Login successful",
+      message: "successful",
       result: result,
     });
   });
@@ -189,14 +256,12 @@ app.post("/selectSystemParticles", async (req, res) => {
       return res.status(500).json({ error: "Failed to select particle" });
     }
 
-    if (result.length === 0) {
-      return res.status(404).json({ error: "particle not found" }); //accessing someting that doesnt exist error
-    }
-
-    //console.log("Login successful" + result[0]);
+    // if (result.length === 0) {
+    //   return res.status(404).json({ error: "particle not found" }); //accessing someting that doesnt exist error
+    // }
 
     res.json({
-      message: "Login successful",
+      message: "successful",
       result: result,
     });
   });
@@ -206,26 +271,47 @@ app.post("/selectSystemParticles", async (req, res) => {
 app.post("/selectSystemPoints", async (req, res) => {
   const { sysID } = req.body;
 
-  const query = `SELECT p.* FROM SystemPointRelation sp JOIN Particles p ON sp.pointID = p.pointID WHERE sp.systemID = ?`;
+  const query = `SELECT p.* FROM SystemPointRelation sp JOIN Points p ON sp.pointID = p.pointID WHERE sp.systemID = ?`;
 
   pool.execute(query, [sysID], async (err, result) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Failed to select particle" });
+      return res.status(500).json({ error: "Failed to select point" });
     }
 
-    if (result.length === 0) {
-      return res.status(404).json({ error: "particle not found" }); //accessing someting that doesnt exist error
-    }
-
-    //console.log("Login successful" + result[0]);
+    // if (result.length === 0) {
+    //   return res.status(404).json({ error: "point not found" }); //accessing someting that doesnt exist error
+    // }
 
     res.json({
-      message: "Login successful",
+      message: "successful",
       result: result,
     });
   });
 });
+
+app.post("/selectParticlePointRelations", async (req, res) => {
+  const { sysID } = req.body;
+
+  const query = "SELECT `particleID`, `pointID` FROM `SystemParticlePointConnections` WHERE `systemID` = ?";
+
+  pool.execute(query, [sysID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select particle-point relation" });
+    }
+
+    // if (result.length === 0) {
+    //   return res.status(404).json({ error: "relation not found" }); 
+    // }
+
+    res.json({
+      message: "successful",
+      result: result,
+    });
+  });
+});
+
 
 app.post("/selectSystem", async (req, res) => {
   const { sysID } = req.body;
@@ -242,14 +328,74 @@ app.post("/selectSystem", async (req, res) => {
       return res.status(404).json({ error: "Sys not found" }); //accessing someting that doesnt exist error
     }
 
-    //console.log("Login successful" + result[0]);
-
     res.json({
       system: result
     });
   });
 });
 
+app.post("/updateSysData", async (req, res) => {
+  const { sysData, sysID } = req.body;
+
+  const query = "UPDATE `Systems` SET `systemData` = ? WHERE `systemID` = ?";
+
+  pool.execute(query, [sysData, sysID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select Sys" });
+    }
+
+    // if (result.length === 0) {
+    //   return res.status(404).json({ error: "Sys not found" }); //accessing someting that doesnt exist error
+    // }
+
+    res.json({
+      system: result,
+    });
+  });
+});
+
+app.post("/updateParticleData", async (req, res) => {
+  const { particleData, particleID } = req.body;
+
+  const query = "UPDATE `Particles` SET `particleData` = ? WHERE `particleID` = ?";
+
+  pool.execute(query, [particleData, particleID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to update particle" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "particle not found" }); //accessing someting that doesnt exist error
+    }
+
+    res.json({
+      system: result,
+    });
+  });
+});
+
+app.post("/updatePointData", async (req, res) => {
+  const { pointData, pointID } = req.body;
+
+  const query = "UPDATE `Points` SET `pointData` = ? WHERE `pointID` = ?";
+
+  pool.execute(query, [pointData, pointID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to select point" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "point not found" }); //accessing someting that doesnt exist error
+    }
+
+    res.json({
+      system: result,
+    });
+  });
+});
 
 // get the next user ID for user registration
 app.get("/getNextUserID", (req, res) => {
@@ -258,7 +404,7 @@ app.get("/getNextUserID", (req, res) => {
   pool.execute(query, (err, result) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Failed to count IDs" });
+      return res.status(500).json({ error: "Failed to count userIDs" });
     }
 
     res.json({ totUsers: result[0].totUsers });
@@ -272,10 +418,54 @@ app.get("/getNextSysID", (req, res) => {
   pool.execute(query, (err, result) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Failed to count IDs" }); //this is an internal server error
+      return res.status(500).json({ error: "Failed to count sysIDs" }); //this is an internal server error
     }
 
     res.json({ totSys: result[0].totSys });
+  });
+});
+
+app.get("/getNextParticleID", (req, res) => {
+  const query = "SELECT COUNT(*) AS totParticles FROM `Particles`";
+
+  pool.execute(query, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to count particles" }); //this is an internal server error
+    }
+
+    res.json({ totParticles: result[0].totParticles });
+  });
+});
+
+app.get("/getNextPointID", (req, res) => {
+  const query = "SELECT COUNT(*) AS totPoints FROM `Points`";
+
+  pool.execute(query, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to count points" }); //this is an internal server error
+    }
+
+    res.json({ totPoints: result[0].totPoints });
+  });
+});
+
+app.post("/deleteParticlePointRelations", async (req, res) => {
+  const { sysID } = req.body;
+
+  const query = "DELETE FROM `SystemParticlePointConnections` WHERE `systemID` = ?";
+
+  pool.execute(query, [sysID], async (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to delete particle-point relation" });
+    }
+
+    res.json({
+      message: "successful",
+      result: result,
+    });
   });
 });
 
