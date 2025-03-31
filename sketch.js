@@ -65,38 +65,6 @@ class Vector {
   }
 };
 
-// class Stack {
-//   constructor() {
-//     this.items = [];
-//   }
-
-//   push(item) {
-//     this.items.push(item);
-//   }
-
-//   pop() {
-//     if (this.isEmpty()) {
-//       return null;
-//     }
-//     return this.items.pop();
-//   }
-
-//   peek() {
-//     if (this.isEmpty()) {
-//       return null;
-//     }
-//     return this.items[this.items.length - 1];
-//   }
-
-//   isEmpty() {
-//     return this.items.length === 0;
-//   }
-
-//   getSize() {
-//     return this.items.length;
-//   }
-// }
-
 class System {
   constructor(id) {
     this.id = id;
@@ -331,48 +299,14 @@ class System {
 
     this.updateSysDimensions(window.innerWidth, window.innerHeight - 100);
     //this.createGrid(this.width, this.height, this.gridSize);
+
+    this.createEnvControls();
   };
 
-  // createGrid(w, h) {
-  //   let cols = Math.ceil(w / this.gridSize);
-  //   let rows = Math.ceil(h / this.gridSize);
-  //   let smallestCol = Math.floor(this.smallestY / this.gridSize);
-  //   let smallestRow = Math.floor(this.smallestX / this.gridSize);
 
-  //   let rowsNum = rows + (2 * (Math.abs(smallestRow)))
-  //   let colsNum = cols + (2 * (Math.abs(smallestCol)))
-    
-  //   this.grid = new Array(rowsNum);
-  //   for (let i = 0; i < rowsNum; i++) { //not right check when smallest row is
-  //     this.grid[i] = new Array(colsNum);
-  //     for (let j = 0; j < colsNum; j++) {
-  //       this.grid[i][j] = [];
-  //     };
-  //   };
-  // };
-
-  // addToGrid(obj) {
-  //   let smallestCol = Math.abs(Math.floor(this.smallestY / this.gridSize));
-  //   let smallestRow = Math.abs(Math.floor(this.smallestX / this.gridSize));
-
-  //   let row = Math.floor(obj.x / this.gridSize)  + smallestRow;
-  //   let col = Math.floor(obj.y / this.gridSize)  + smallestCol;
-
-  //   let prevX = obj.gridPos[0];
-  //   let prevY = obj.gridPos[1];
-
-  //   this.grid[prevX][prevY] = this.grid[prevX][prevY].filter(element => element !== obj);
-
-  //   this.grid[row][col].push(obj);
-  //   obj.gridPos = [row, col];
-  // };
 
   checkCollisions(obj) { //TODO handle edge cases-----------------------------------------------------------------------------------------------------
-    //let smallestCol = Math.abs(Math.floor(this.smallestY / this.gridSize));
-    //let smallestRow = Math.abs(Math.floor(this.smallestX / this.gridSize));
 
-    //let objX = obj.gridPos[0];
-    //let objY = obj.gridPos[1];
 
     for (let otherObj of this.particles) {
       if (otherObj.originPoint && obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj) && !obj.overlapedObjects.includes(otherObj)) {
@@ -382,25 +316,7 @@ class System {
         console.log(obj.id, "after: ", obj.velocity.x, obj.velocity.y, otherObj.id, "after: ", otherObj.velocity.x, otherObj.velocity.y);
         console.log("Collision handled-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
       }
-    }
-
-  // grid method
-  //   for (let i = -1; i <= 1; i++) {
-  //     for (let j = -1; j <= 1; j++) {
-  //       if ((objX + i) > 0 && (objY + j) > 0) {
-  //         let currentSquare = this.grid[objX + i][objY + j];
-  //         if (currentSquare.length > 0) {
-  //           for (let otherObj of currentSquare) {
-  //             if (obj !== otherObj && this.checkIfCollisionDetected(obj, otherObj) && !obj.overlapedObjects.includes(otherObj)) {
-  //               console.log("Collision detected-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
-  //               this.handleCollision(obj, otherObj);
-  //               console.log("Collision handled-----------------------------------------------------------------------------------------------------------------------------------------", this.t);
-  //             }
-  //           }
-  //         }
-  //       };
-  //     }; 
-  //   };  
+    } 
   };
 
   checkIfCollisionDetected(obj1, obj2) {
@@ -664,6 +580,43 @@ class System {
     propertyInputContainer.appendChild(propertyRadioBox);
   };
   
+  createEnvControls() {
+    const envCategory = document.getElementById("environmentHeading");
+    const envContent = document.getElementById("environmentContent");
+
+
+    let sys = this
+    this.createControlsTextInput(envContent, "Gravity", "Set Gravity", (e) => {
+      //console.log(parseFloat(e.target.value), "value");
+      let parentContainer = e.target.parentElement;
+      let textBox = parentContainer.children[0]; //text box is the first element under the parent
+      let gravityValue = parseFloat(textBox.value);
+      if (!isNaN(gravityValue)) {
+        sys.g = gravityValue;
+        sys.resetSys();
+      } else {
+        alert(
+          "Please enter a valid number for gravity"
+        );
+      }
+      sys.g = gravityValue;
+      sys.resetSys();
+    }, "gravityTextbox");
+
+    this.createControlsTextInput(envContent, "Coefficient Of Restitution", "Set COR", (e) => {
+      //console.log(parseFloat(e.target.value), "value");
+      let parentContainer = e.target.parentElement;
+      let textBox = parentContainer.children[0]; //text box is the first element under the parent
+      let CORValue = parseFloat(textBox.value);
+      if (!isNaN(CORValue)) {
+        sys.coefficientOfRestitution = CORValue;
+        sys.resetSys();
+      } else {
+        alert("Please enter a valid number for the coefficient of restitution.");
+      }
+    }, "CORTextbox");
+
+  }
  
   createParticle(x, y, colour) {
     let particleID = this.particles.length;
@@ -833,14 +786,14 @@ class System {
 
       sys.createControlsTextInput(
         controlsContainer,
-        "Initial Angle",
+        "Angle",
         "Set Angle",
         initialAngleSubmit
       );
 
       sys.createControlsTextInput(
         controlsContainer,
-        "Initial Velocity",
+        "Velocity",
         "Set Velocity",
         initialVelocitySubmit,
         "particle-" + particleID + "-velocity"
@@ -1926,7 +1879,7 @@ class Particle {
 
   getTension() {
     let tension = 0;
-    //console.log(this.velocity.x, this.velocity.y, "velocity");
+    
     let tangentialVelocityComponent = this.getTangentialVelocity(
       this.pos,
       this.velocity
@@ -1935,14 +1888,7 @@ class Particle {
     console.log(currVel, "currVel");
     let currAngle = -1 * this.pos.getAngle(); //uses standard [in polar form] angle (diff to the inital angle defention as it needs angle from the lower vertical)
     console.log(currAngle, "currangle");
-    //console.log(currVel, "currVel");
-    // console.log(
-    //   this.mass,
-    //   currVel ** 2,
-    //   this.lineDist,
-    //   this.sys.g,
-    //   Math.sin(Math.abs(currAngle))
-    // );
+    
     if (currAngle >= 0 && currAngle < Math.PI / 2) {
       //1st quadrant --> T+Mgsin(theta) = Ma
       console.log("1st quadrant");
@@ -1968,7 +1914,7 @@ class Particle {
         this.mass * (currVel ** 2 / this.lineDist) +
         this.mass * this.sys.g * Math.sin(Math.abs(currAngle));
     }
-    //console.log(tension, "tension");
+    
     return tension;
   }
 
@@ -1984,38 +1930,29 @@ class Particle {
     console.log(latestInitialConditionsList, "latestInitialConditionsList");
     let latestInitialConditions = latestInitialConditionsList[0];
     let t0 = latestInitialConditionsList[1];
-    //let latestInitialConditions = this.freeFallInitialConditions.peek();
 
 
-    //console.log("lates inituial conditions for proj mot:", latestInitialConditions);
+    
     let s0 = latestInitialConditions[0];
     let u = latestInitialConditions[1];
     let a = latestInitialConditions[2];
-    //let t0 = latestInitialConditions[3];
+   
 
-    // console.log("inituial conditions for proj mot  {");
-    // console.log(s0.x, s0.y, "s0");
-    // console.log(u.x, u.y, "u");
-    // console.log(a.x, a.y, "a");
-    // console.log(t0, "t0");
-    // console.log(t, "t");
-    // console.log("} (end)");
+
 
     s = s0
       .getAddition(u.getScale(t - t0))
       .getAddition(a.getScale(0.5 * (t - t0) ** 2));
     v = u.getAddition(a.getScale(t - t0));
 
-    // console.log(s.x, s.y, "s");
-    // console.log(v.x, v.y, "v");
+   
 
     this.pos.x = s.x;
     this.pos.y = s.y;
     this.x = this.pos.x;
     this.y = this.pos.y;
 
-    // this.originPoint.endX = this.x;
-    // this.originPoint.endY = this.y;
+    
 
     this.velocity.x = v.x;
     this.velocity.y = v.y;
@@ -2030,30 +1967,16 @@ class Particle {
     let v = new Vector(0, 0);
 
     let latestInitialConditionsList = this.getFreeFallIntialConditions(t);
-    //console.log(latestInitialConditionsList, "latestInitialConditionsList");
     let latestInitialConditions = latestInitialConditionsList[0];
     let t0 = latestInitialConditionsList[1];
     
-
-    //console.log("lates inituial conditions for proj mot:", latestInitialConditions);
     let s0 = latestInitialConditions[0].getScale(1 / this.sys.scale);
     let u = latestInitialConditions[1].getScale(1 / this.sys.scale);
     let a = latestInitialConditions[2];
-    
-
-    // console.log("inituial conditions for proj mot  {");
-    // console.log(s0.x, s0.y, "s0");
-    // console.log(u.x, u.y, "u");
-    // console.log(a.x, a.y, "a");
-    // console.log(t0, "t0");
-    // console.log(t, "t");
-    // console.log("} (end)");
 
     s = (s0.getAddition(u.getScale(t - t0)).getAddition(a.getScale(0.5 * (t - t0) ** 2))).getScale(this.sys.scale);
     v = (u.getAddition(a.getScale(t - t0))); //.getScale(this.sys.scale);
 
-    // console.log(s.x, s.y, "s FINAL");
-    // console.log(v.x, v.y, "v FINAL");
     this.pos.x = s.x;
     this.pos.y = s.y;
     
@@ -2220,21 +2143,7 @@ class Particle {
       this.sys.g,
       this.lineDist / this.sys.scale
     );
-    //let angAndAngVel = rungeKutta(startTime, t, initalConditionsList[0], initalConditionsList[1] / (initalConditionsList[2] / this.sys.scale), 0.0025, this.sys.g, (initalConditionsList[2] / this.sys.scale));
-    //let angAndAngVel = rungeKutta(this.sys.t0, t, this.initialAngle, this.initialVel / (this.lineDist / this.sys.scale), 0.0025, this.sys.g, (this.lineDist / this.sys.scale));
-    // console.log(
-    //   "rk-values for obj",
-    //   this.id,
-    //   ":",
-    //   startTime,
-    //   t,
-    //   this.initialAngle,
-    //   this.initialVel / (this.lineDist / this.sys.scale),
-    //   0.0025,
-    //   this.sys.g,
-    //   this.lineDist / this.sys.scale
-    // );
-    // console.log("vel for", this.id, ":", this.initialVel);
+    
     this.angle = angAndAngVel[0];
 
     this.angVelocity = angAndAngVel[1];
@@ -2274,13 +2183,8 @@ class Particle {
       this.initialAngle = this.getAngleFromPos();
     }
     if (initialLineDist == 0) {
-      //this.lineDist = dist(this.x, this.y, this.originPoint.x, this.originPoint.y);
       this.lineDist = this.getLineDist();
     }
-
-    //let row = floor(this.x / this.sys.gridSize);
-    //let col = floor(this.y / this.sys.gridSize);
-    //this.gridPos = [row, col];
   }
 
   getLineDist() {
@@ -2292,10 +2196,6 @@ class Particle {
     this.pos.y = this.y - this.originPoint.y;
     //gets position vector from originPoint set as the origin
 
-    console.log(
-      -1 * this.pos.getAngle() + Math.PI / 2,
-      "initial angle SETTTTT"
-    );
     return -1 * this.pos.getAngle() + Math.PI / 2;
   }
 
@@ -2311,7 +2211,7 @@ class Particle {
 sys1 = new System(1)
 sysList.push(sys1)
 sys1.setup();
-
+//sys1.loadData();
 if (sessionStorage.getItem("sysID")) {
   sys1.loadData();
 } else {
@@ -2334,7 +2234,7 @@ function setup() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight - 100);
-  //sys1.updateSysDimensions(window.innerWidth, window.innerHeight - 100);
+ 
 }
 
 function f1(t, theta, u) {
@@ -2379,9 +2279,7 @@ function rungeKutta(t0, tf, theta0, thetaDot0, h, g, len) {
 
 //https://www.youtube.com/watch?v=i9-seHaDkrw
 //https://www.youtube.com/watch?v=TjZgQa2kec0
-//let vall = rungeKutta(0, 0.2, 1, 0, 0.02); ------------TEST
-//console.log(vall);
-
+//let vall = rungeKutta(0, 0.2, 1, 0, 0.02); ------------TEST WORKS
 
 function draw() {
   background(242, 233, 228);
@@ -2471,7 +2369,6 @@ function mouseDragged() {
 }
 
 function mousePressed() {
-  console.log(sys1.delete, "delete mode");
   for (let e of sys1.elements) {
     if ((mouseX - e.x) ** 2 + (mouseY - e.y) ** 2 <= e.radius ** 2) { //checks if distance between mouse and element < element radius (ie element clicked)
       if (sys1.delete) {
