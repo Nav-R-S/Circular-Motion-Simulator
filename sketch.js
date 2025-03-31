@@ -138,7 +138,7 @@ class System {
     let saveButton = document.getElementById("saveButton");
     let binButton = document.getElementById("binButton");
     let profileButton = document.getElementById("profileButton");
-    
+    let sys = this;
     timeBar.max = 0;
     timeBar.min = 0;
 
@@ -293,13 +293,19 @@ class System {
     };
 
     binButton.onclick = function () {
-      
+      if (sys.delete) {
+        sys.delete = false;
+        console.log(sys.delete)
+      } else {
+        sys.delete = true;
+        console.log(sys.delete);
+      }
       if (binButton.classList.contains("toolbarButtonPressed")) {
         binButton.src = "images/trashColoured.png";
-        this.delete = false;
+        //this.delete = false;
       } else {
         binButton.src = "images/trashColouredPressed.png";
-        this.delete = true;
+        //this.delete = true;
       }
       binButton.classList.toggle("toolbarButtonPressed");
     };
@@ -2465,9 +2471,11 @@ function mouseDragged() {
 }
 
 function mousePressed() {
+  console.log(sys1.delete, "delete mode");
   for (let e of sys1.elements) {
     if ((mouseX - e.x) ** 2 + (mouseY - e.y) ** 2 <= e.radius ** 2) { //checks if distance between mouse and element < element radius (ie element clicked)
       if (sys1.delete) {
+        
         if (sys1.points.includes(e)) {
           sys1.points = sys1.points.filter(element => element !== e);
           sys1.elements = sys1.elements.filter(element => element !== e);
