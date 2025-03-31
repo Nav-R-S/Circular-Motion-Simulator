@@ -1,3 +1,24 @@
+let loginContentContainer = document.getElementById("loginContentContainer");
+let signOut = document.getElementById("signOutDiv");
+
+if (sessionStorage.getItem("LoggedOn")) {
+  loginContentContainer.style.display = "none";
+  signOut.style.display = "flex"; // Show the sign out div if logged in
+} else {
+  loginContentContainer.style.display = "flex"; // Show the login content container
+  signOut.style.display = "none"; 
+}
+
+signOut.onclick = function () {
+  sessionStorage.removeItem("LoggedOn"); 
+  sessionStorage.removeItem("userID"); 
+  loginContentContainer.style.display = "flex"; 
+  signOut.style.display = "none"; 
+  window.location.href = "login.html"; 
+  window.location.reload(); 
+}
+
+
 let homeButton = document.getElementById("homeButton");
 
 homeButton.onclick = function () {
@@ -35,7 +56,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
         sessionStorage.setItem("userID", data.userID); // Store the username (or any other necessary data)
         sessionStorage.setItem("LoggedOn", true); // Store the login state
 
-        //window.location.href = "home.html"; // Redirect to the home page after successful login
+        window.location.href = "home.html"; // Redirect to the home page after successful login
       } else {
         alert("User does not exist or incorrect password");
       }

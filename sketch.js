@@ -65,37 +65,37 @@ class Vector {
   }
 };
 
-class Stack {
-  constructor() {
-    this.items = [];
-  }
+// class Stack {
+//   constructor() {
+//     this.items = [];
+//   }
 
-  push(item) {
-    this.items.push(item);
-  }
+//   push(item) {
+//     this.items.push(item);
+//   }
 
-  pop() {
-    if (this.isEmpty()) {
-      return null;
-    }
-    return this.items.pop();
-  }
+//   pop() {
+//     if (this.isEmpty()) {
+//       return null;
+//     }
+//     return this.items.pop();
+//   }
 
-  peek() {
-    if (this.isEmpty()) {
-      return null;
-    }
-    return this.items[this.items.length - 1];
-  }
+//   peek() {
+//     if (this.isEmpty()) {
+//       return null;
+//     }
+//     return this.items[this.items.length - 1];
+//   }
 
-  isEmpty() {
-    return this.items.length === 0;
-  }
+//   isEmpty() {
+//     return this.items.length === 0;
+//   }
 
-  getSize() {
-    return this.items.length;
-  }
-}
+//   getSize() {
+//     return this.items.length;
+//   }
+// }
 
 class System {
   constructor(id) {
@@ -137,6 +137,7 @@ class System {
     let homeButton = document.getElementById("homeButton");
     let saveButton = document.getElementById("saveButton");
     let binButton = document.getElementById("binButton");
+    let profileButton = document.getElementById("profileButton");
     
     timeBar.max = 0;
     timeBar.min = 0;
@@ -182,6 +183,10 @@ class System {
 
     homeButton.onclick = () => {
       window.location.href = "home.html";
+    };
+
+    profileButton.onclick = () => {
+      window.location.href = "login.html";
     };
 
     createParticleButton.onclick = function () {
@@ -590,7 +595,7 @@ class System {
   }
   // creates slider for object elements in menu
 
-  createControlsTextInput(controlsContainer, title, buttonText, submitButtonFunction) {
+  createControlsTextInput(controlsContainer, title, buttonText, submitButtonFunction, InputBoxId) {
     let propertyTitle = document.createElement("p");
     propertyTitle.textContent = title;
     controlsContainer.appendChild(propertyTitle);
@@ -602,6 +607,7 @@ class System {
     let propertyInputBox = document.createElement("input");
     propertyInputBox.type = "text";
     propertyInputBox.classList.add("controlsInputBox");
+    propertyInputBox.id = InputBoxId;
     propertyInputContainer.appendChild(propertyInputBox);
 
     let propertyInputButton = document.createElement("button");
@@ -634,6 +640,23 @@ class System {
     propertyText.onclick = linkFunction;
     controlsContainer.appendChild(propertyText);
   }
+
+  createControlsRadioBox(controlsContainer, title, name, radioBoxFunction) {
+    let propertyTitle = document.createElement("p");
+    propertyTitle.textContent = title;
+    controlsContainer.appendChild(propertyTitle);
+
+    let propertyInputContainer = document.createElement("div");
+    propertyInputContainer.classList.add("radioInput");
+    controlsContainer.appendChild(propertyInputContainer);
+
+    let propertyRadioBox = document.createElement("input");
+    propertyRadioBox.type = "radio";
+    propertyRadioBox.name = name;
+    propertyRadioBox.onclick = radioBoxFunction;
+    propertyRadioBox.classList.add("controlsRadioBox");
+    propertyInputContainer.appendChild(propertyRadioBox);
+  };
   
  
   createParticle(x, y, colour) {
@@ -813,7 +836,8 @@ class System {
         controlsContainer,
         "Initial Velocity",
         "Set Velocity",
-        initialVelocitySubmit
+        initialVelocitySubmit,
+        "particle-" + particleID + "-velocity"
       );
 
       sys.createControlsLink(controlsContainer, "Graph", createGraphLinkFunction);
@@ -1572,7 +1596,29 @@ class System {
       controlsContainer.classList.add("controls");
       pointElement.appendChild(controlsContainer);
 
-      sys.createControlsCheckbox(controlsContainer, "Collisions");
+      //sys.createControlsCheckbox(controlsContainer, "Collisions");
+      let stringTypeFunction = function () {
+        let point = sys.points[pointID];
+        point.type = "string";
+      }
+
+      let rodTypeFunction = function () {
+        let point = sys.points[pointID];
+        point.type = "rod";
+      };
+
+      sys.createControlsRadioBox(
+        controlsContainer,
+        "string",
+        "type",
+        stringTypeFunction
+      );
+      sys.createControlsRadioBox(
+        controlsContainer,
+        "rod",
+        "type",
+        rodTypeFunction
+      );
     }
 
     pointNameDisplay.onclick = function () {
@@ -1714,6 +1760,7 @@ class Point {
     this.lineDrag = false;
     this.lineLocked = false;
     this.particle = null;
+    this.type = "rod"
   };
   draw() {
     strokeWeight(2);
@@ -1792,6 +1839,16 @@ class Particle {
   }
 
   update(t) {
+    if (this.originPoint) {
+      if (this.originPoint.type == "string") {
+        //for str
+        this.updateString(t);
+      } else if(this.originPoint.type == "rod") {
+        //for rod
+        this.updateRod(t);
+        this.updateVelocityRod();
+      }
+    }
     //for particle
     // let s0 = new Vector(this.pos.x, this.pos.y);
     // let u = new Vector(this.velocity.x, this.velocity.y);
@@ -1803,8 +1860,7 @@ class Particle {
     //this.updateRod(t);
     //this.updateVelocityRod();
 
-    //for str
-    this.updateString(t);
+    
 
     //old
     //this.sys.checkCollisions(this);
@@ -1833,6 +1889,12 @@ class Particle {
       this.x + this.velocity.x * 10,
       this.y + this.velocity.y * 10
     );
+    this.displayMagnitudeOfVelocity();
+  }
+
+  displayMagnitudeOfVelocity() {
+    let velocityBox = document.getElementById("particle-" + this.sys.particles.indexOf(this) + "-velocity");
+    velocityBox.value = this.velocity.getMagnitude().toFixed(2);
   }
 
   getIntialConditions(t) {
@@ -1986,8 +2048,8 @@ class Particle {
 
     // console.log(s.x, s.y, "s FINAL");
     // console.log(v.x, v.y, "v FINAL");
-    // this.pos.x = s.x;
-    // this.pos.y = s.y;
+    this.pos.x = s.x;
+    this.pos.y = s.y;
     
     this.x = this.originPoint.x + this.pos.x;
     this.y = this.originPoint.y + this.pos.y;
@@ -2117,11 +2179,11 @@ class Particle {
         
         const a = new Vector(0, this.sys.g); //dont * -1 as the y axis is flipped in the coordinate system
         let lst = [s0, u, a];
-        // console.log("INITAL FREE FALL CONDITIONS =======================================================>>");
-        // console.log(s0.x, s0.y, "s0");
-        // console.log(u.x, u.y, "u");
-        // console.log(a.x, a.y, "a");
-        // console.log("===========================================================================>>");
+        console.log("INITAL FREE FALL CONDITIONS =======================================================>>");
+        console.log(s0.x, s0.y, "s0");
+        console.log(u.x, u.y, "u");
+        console.log(a.x, a.y, "a");
+        console.log("===========================================================================>>");
 
         //console.log(lst[1].x, lst[1].y, "lst uuuu");
 

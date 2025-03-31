@@ -170,19 +170,7 @@ app.post("/checkUsernameExists", (req, res) => {
   });
 });
 
-// app.post("/checkUserDetails", (req, res) => {
-//   const { username, password } = req.body;
-//   const query = "SELECT * FROM `UserDetails` WHERE `username` = ?";
 
-//   pool.execute(query, [username, password], (err, result) => {
-//     if (err) {
-//       console.error(err);
-//       return res.status(500).json({ error: "Failed to select user" });
-//     }
-
-//     res.json({ exists: result.length > 0 });
-//   });
-// });
 
 app.post("/checkUserDetails", async (req, res) => {
   const { username, password } = req.body;
@@ -232,9 +220,9 @@ app.post("/selectUserSystems", async (req, res) => {
       return res.status(500).json({ error: "Failed to select user" });
     }
 
-    if (result.length === 0) {
-      return res.status(404).json({ error: "User not found" }); //accessing someting that doesnt exist error
-    }
+    // if (result.length === 0) {
+    //   return res.status(404).json({ error: "User not found" }); //accessing someting that doesnt exist error
+    // }
 
     res.json({
       message: "successful",
